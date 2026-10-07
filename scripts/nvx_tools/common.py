@@ -120,12 +120,15 @@ def run_capture(
     env: Mapping[str, str] | None = None,
 ) -> CommandResult:
     command = tuple(os.fspath(arg) for arg in args)
-    result = subprocess.run(
-        command,
-        cwd=cwd,
-        env=env,
-        capture_output=True,
-    )
+    try:
+        result = subprocess.run(
+            command,
+            cwd=cwd,
+            env=env,
+            capture_output=True,
+        )
+    except OSError as error:
+        raise ScriptError(f"failed to start {command[0]!r}: {error}") from error
     return CommandResult(command, result.returncode, result.stdout, result.stderr)
 
 

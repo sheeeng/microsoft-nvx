@@ -15888,6 +15888,18 @@ class GitOutputTests(unittest.TestCase):
             timeout=30.0,
         )
 
+    def test_run_capture_reports_command_start_failures(self):
+        with patch.object(
+            common.subprocess,
+            "run",
+            side_effect=FileNotFoundError("missing executable"),
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                r"failed to start 'missing-tool': missing executable",
+            ):
+                common.run_capture(["missing-tool"])
+
 
 class SharedFileTests(unittest.TestCase):
     def test_checksum_manifest_detects_modified_file(self):
