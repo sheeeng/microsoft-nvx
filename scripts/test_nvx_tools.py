@@ -11272,8 +11272,8 @@ class BenchmarkTests(unittest.TestCase):
                 cpus="0-3",
                 timeout=1.0,
                 teardown_mode="guest-exit",
-                net=None,
-                network_profile=None,
+                net="10.0.0.2/24",
+                network_profile="portable",
                 keep_kvm_stage=True,
             )
             workers = (
@@ -11330,6 +11330,16 @@ class BenchmarkTests(unittest.TestCase):
                             run_worker.call_args.args[1],
                             result_kind,
                         )
+                        if not result_kind:
+                            self.assertEqual(
+                                command[-4:],
+                                [
+                                    "--net",
+                                    "10.0.0.2/24",
+                                    "--network-profile",
+                                    "portable",
+                                ],
+                            )
 
     def test_kvm_worker_defaults_to_translated_system_temporary_directory(self):
         with tempfile.TemporaryDirectory() as temporary:

@@ -6170,7 +6170,7 @@ def benchmark_kvm(
         args.teardown_mode,
     ]
     if args.net is not None:
-        command.extend(("--net", args.net, "--network-profile", args.network_profile))
+        append_network_arguments(command, args.net, args.network_profile)
     try:
         return cast(BenchmarkResult, _run_kvm_worker(command, ""))
     finally:
