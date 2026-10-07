@@ -353,10 +353,10 @@ def download(
 ) -> None:
     if attempts < 1:
         raise ScriptError("download attempts must be positive")
-    destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(f"{destination.name}.part")
     for attempt in range(1, attempts + 1):
         try:
+            destination.parent.mkdir(parents=True, exist_ok=True)
             digest = hashlib.sha256()
             request = (
                 urllib.request.Request(url, headers=dict(headers))

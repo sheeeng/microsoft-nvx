@@ -16263,6 +16263,19 @@ class DownloadTests(unittest.TestCase):
             urlopen.assert_not_called()
             self.assertFalse(destination.exists())
 
+    def test_reports_output_directory_errors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            destination = Path(temporary) / "archive.tar.xz"
+            with (
+                patch.object(
+                    Path,
+                    "mkdir",
+                    side_effect=PermissionError(13, "Permission denied"),
+                ),
+                self.assertRaisesRegex(common.ScriptError, "failed to download"),
+            ):
+                common.download("https://example.invalid/archive.tar.xz", destination)
+
     def test_retries_checksum_mismatch(self):
         payload = b"verified archive"
         expected_sha256 = hashlib.sha256(payload).hexdigest()
