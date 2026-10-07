@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -15836,6 +15837,26 @@ class ReleaseTests(unittest.TestCase):
                     self.assertFalse(destination.exists())
                 else:
                     self.assertEqual(destination.read_bytes(), name.encode("ascii"))
+
+
+class DoctorTests(unittest.TestCase):
+    def test_probe_directory_failure_is_actionable(self):
+        directory = Path("/unwritable/probe")
+        target = directory / "probe"
+        with (
+            patch.object(doctor, "probe_path", return_value=target),
+            patch.object(doctor.shutil, "which", return_value="/usr/bin/rustc"),
+            patch.object(
+                Path,
+                "mkdir",
+                side_effect=OSError("permission denied"),
+            ),
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                "failed to create host time probe directory",
+            ):
+                doctor.build_probe(directory)
 
 
 class PositiveIntTests(unittest.TestCase):

@@ -168,7 +168,12 @@ def build_probe(directory: Path) -> Path:
     rustc = shutil.which("rustc")
     if rustc is None:
         raise ScriptError("rustc is required to build the host time probe")
-    directory.mkdir(parents=True, exist_ok=True)
+    try:
+        directory.mkdir(parents=True, exist_ok=True)
+    except OSError as error:
+        raise ScriptError(
+            f"failed to create host time probe directory {directory}: {error}"
+        ) from error
     temporary = target.with_name(f".{target.stem}-{os.getpid()}{target.suffix}")
     completed = subprocess.run(
         [
