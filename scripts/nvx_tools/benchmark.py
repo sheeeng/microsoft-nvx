@@ -2600,6 +2600,41 @@ def run_guest_script(
     return result
 
 
+def _start_snapshot_process(
+    command: Sequence[str],
+    *,
+    timeout: float,
+    windows_cpus: set[int] | None,
+    log_setting: str = "off",
+) -> tuple[
+    InteractiveProcess,
+    subprocess.Popen[bytes],
+    TimeAbiMonitor,
+    queue.Queue[bytes | None],
+    float,
+    bytearray,
+]:
+    environment = os.environ.copy()
+    environment["OPENVMM_LOG"] = log_setting
+    interaction = InteractiveProcess(command, environment)
+    process = interaction.process
+    monitor = TimeAbiMonitor(command)
+    if windows_cpus is not None:
+        set_windows_affinity(process.pid, windows_cpus)
+    chunks: queue.Queue[bytes | None] = queue.Queue()
+    threading.Thread(
+        target=interaction.read_output, args=(chunks,), daemon=True
+    ).start()
+    return (
+        interaction,
+        process,
+        monitor,
+        chunks,
+        time.monotonic() + timeout,
+        bytearray(),
+    )
+
+
 def capture_automatic_snapshot(
     command: Sequence[str],
     snapshot_path: Path,
@@ -2610,20 +2645,11 @@ def capture_automatic_snapshot(
 ) -> None:
     if snapshot_path.exists():
         shutil.rmtree(snapshot_path)
-    environment = os.environ.copy()
-    environment["OPENVMM_LOG"] = "off"
-    interaction = InteractiveProcess(command, environment)
-    process = interaction.process
-    monitor = TimeAbiMonitor(command)
-    if windows_cpus is not None:
-        set_windows_affinity(process.pid, windows_cpus)
-
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
-    output = bytearray()
+    interaction, process, monitor, chunks, deadline, output = _start_snapshot_process(
+        command,
+        timeout=timeout,
+        windows_cpus=windows_cpus,
+    )
     try:
         while True:
             remaining = deadline - time.monotonic()
@@ -2698,19 +2724,11 @@ def capture_device_restore_snapshot(
 ) -> list[dict[str, str]]:
     if snapshot_path.exists():
         shutil.rmtree(snapshot_path)
-    environment = os.environ.copy()
-    environment["OPENVMM_LOG"] = "off"
-    interaction = InteractiveProcess(command, environment)
-    process = interaction.process
-    monitor = TimeAbiMonitor(command)
-    if windows_cpus is not None:
-        set_windows_affinity(process.pid, windows_cpus)
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
-    output = bytearray()
+    interaction, process, monitor, chunks, deadline, output = _start_snapshot_process(
+        command,
+        timeout=timeout,
+        windows_cpus=windows_cpus,
+    )
     try:
         while True:
             remaining = deadline - time.monotonic()
@@ -2765,20 +2783,20 @@ def run_device_restore_sample(
     log_path: Path,
     windows_cpus: set[int] | None = None,
 ) -> DeviceRestoreSample:
-    environment = os.environ.copy()
-    environment["OPENVMM_LOG"] = "off,virtio_restore=debug"
     started_ns = time.perf_counter_ns()
-    interaction = InteractiveProcess(command, environment)
-    process = interaction.process
-    monitor = TimeAbiMonitor(command)
-    if windows_cpus is not None:
-        set_windows_affinity(process.pid, windows_cpus)
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
-    output = bytearray()
+    (
+        interaction,
+        process,
+        monitor,
+        chunks,
+        deadline,
+        output,
+    ) = _start_snapshot_process(
+        command,
+        timeout=timeout,
+        windows_cpus=windows_cpus,
+        log_setting="off,virtio_restore=debug",
+    )
     pending = bytearray()
     markers: list[dict[str, str]] = []
     events: list[dict[str, object]] = []
