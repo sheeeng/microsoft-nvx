@@ -2156,6 +2156,7 @@ def workload_boot_command(
     processors: int = 1,
     command_prefix: Sequence[str] = (),
     network: str | None = None,
+    network_profile: str = "portable",
     mount: str | None = None,
     virtio_blk: Path | None = None,
     microvm_sandbox_block: Path | None = None,
@@ -2180,7 +2181,7 @@ def workload_boot_command(
         cmdline,
     ]
     if network is not None:
-        append_network_arguments(command, network)
+        append_network_arguments(command, network, network_profile)
     if mount is not None:
         command.extend(("--mount", mount))
     if virtio_blk is not None:
@@ -5700,29 +5701,18 @@ def benchmark_phase2_kvm(
 
 def run_kvm_worker(args: argparse.Namespace) -> int:
     stage = Path(args._stage_dir)
-    boot_command = [
-        "taskset",
-        "-c",
-        args.cpus,
-        str(stage / "openvmm"),
-        "--single-process",
-        "--machine",
-        "microvm",
-        "--processors",
-        str(args.processors),
-        "--hypervisor",
+    boot_command = workload_boot_command(
+        stage / "openvmm",
         "kvm",
-        "--memory",
-        f"{args.memory_mib}M",
-        "--kernel",
-        str(stage / KernelBuildConstants.BINARY_NAME),
-        "--initrd",
-        str(stage / AlpineBuildConstants.INITRAMFS_NAME),
-        "--cmdline",
+        stage / KernelBuildConstants.BINARY_NAME,
+        stage / AlpineBuildConstants.INITRAMFS_NAME,
+        args.memory_mib,
         BASE_TUNING,
-    ]
-    if args.net is not None:
-        append_network_arguments(boot_command, args.net, args.network_profile)
+        processors=args.processors,
+        command_prefix=("taskset", "-c", args.cpus),
+        network=args.net,
+        network_profile=getattr(args, "network_profile", "portable"),
+    )
     if args.suite == "e2e":
         print("Benchmarking OpenVMM/KVM lifecycle", flush=True)
         cold_start = benchmark(

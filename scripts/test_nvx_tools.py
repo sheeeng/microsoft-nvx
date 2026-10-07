@@ -12691,6 +12691,21 @@ class BenchmarkTests(unittest.TestCase):
             ],
         )
 
+        profiled = benchmark.workload_boot_command(
+            Path("openvmm"),
+            "kvm",
+            Path("vmlinux"),
+            Path("initramfs.cpio.gz"),
+            128,
+            "quiet loglevel=0",
+            network="10.0.0.2/24",
+            network_profile="isolated",
+        )
+        self.assertEqual(
+            profiled[-4:],
+            ["--net", "10.0.0.2/24", "--network-profile", "isolated"],
+        )
+
     def test_benchmark_network_requires_explicit_profile(self):
         args = nvx.parse_args(
             [
