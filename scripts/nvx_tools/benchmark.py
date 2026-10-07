@@ -2610,20 +2610,9 @@ def capture_automatic_snapshot(
 ) -> None:
     if snapshot_path.exists():
         shutil.rmtree(snapshot_path)
-    environment = os.environ.copy()
-    environment["OPENVMM_LOG"] = "off"
-    interaction = InteractiveProcess(command, environment)
-    process = interaction.process
-    monitor = TimeAbiMonitor(command)
-    if windows_cpus is not None:
-        set_windows_affinity(process.pid, windows_cpus)
-
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
-    output = bytearray()
+    interaction, process, monitor, chunks, deadline, output = _start_snapshot_capture(
+        command, timeout, windows_cpus
+    )
     try:
         while True:
             remaining = deadline - time.monotonic()
@@ -2686,6 +2675,39 @@ def _require_snapshot_artifacts(snapshot_path: Path, error_prefix: str) -> None:
             )
 
 
+def _start_snapshot_capture(
+    command: Sequence[str],
+    timeout: float,
+    windows_cpus: set[int] | None,
+) -> tuple[
+    InteractiveProcess,
+    subprocess.Popen[bytes],
+    TimeAbiMonitor,
+    queue.Queue[bytes | None],
+    float,
+    bytearray,
+]:
+    environment = os.environ.copy()
+    environment["OPENVMM_LOG"] = "off"
+    interaction = InteractiveProcess(command, environment)
+    process = interaction.process
+    monitor = TimeAbiMonitor(command)
+    if windows_cpus is not None:
+        set_windows_affinity(process.pid, windows_cpus)
+    chunks: queue.Queue[bytes | None] = queue.Queue()
+    threading.Thread(
+        target=interaction.read_output, args=(chunks,), daemon=True
+    ).start()
+    return (
+        interaction,
+        process,
+        monitor,
+        chunks,
+        time.monotonic() + timeout,
+        bytearray(),
+    )
+
+
 def capture_device_restore_snapshot(
     command: Sequence[str],
     snapshot_path: Path,
@@ -2698,19 +2720,9 @@ def capture_device_restore_snapshot(
 ) -> list[dict[str, str]]:
     if snapshot_path.exists():
         shutil.rmtree(snapshot_path)
-    environment = os.environ.copy()
-    environment["OPENVMM_LOG"] = "off"
-    interaction = InteractiveProcess(command, environment)
-    process = interaction.process
-    monitor = TimeAbiMonitor(command)
-    if windows_cpus is not None:
-        set_windows_affinity(process.pid, windows_cpus)
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
-    output = bytearray()
+    interaction, process, monitor, chunks, deadline, output = _start_snapshot_capture(
+        command, timeout, windows_cpus
+    )
     try:
         while True:
             remaining = deadline - time.monotonic()
