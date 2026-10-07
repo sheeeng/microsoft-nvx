@@ -16244,6 +16244,22 @@ class SharedFileTests(unittest.TestCase):
             self.assertTrue(all(member.uid == member.gid == 0 for member in members))
 
 
+class CommandTests(unittest.TestCase):
+    def test_run_checked_reports_startup_errors(self):
+        with (
+            patch.object(
+                common.subprocess,
+                "run",
+                side_effect=FileNotFoundError("missing executable"),
+            ),
+            self.assertRaisesRegex(
+                common.ScriptError,
+                r"failed to start command missing-tool: missing executable",
+            ),
+        ):
+            common.run_checked(["missing-tool"])
+
+
 class DownloadTests(unittest.TestCase):
     def test_rejects_nonpositive_attempts(self):
         with tempfile.TemporaryDirectory() as temporary:
