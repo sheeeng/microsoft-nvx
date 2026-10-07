@@ -25,7 +25,8 @@ source artifacts:
 python3 scripts/nvx.py package --include-source
 ```
 
-The release contains:
+The release contains source archives whose names use the current project
+version and pinned Linux version:
 
 ```text
 source/nvx-project-source-0.1.0.tar.gz
