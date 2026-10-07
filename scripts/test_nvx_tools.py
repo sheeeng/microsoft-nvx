@@ -11184,6 +11184,14 @@ class SandboxTests(unittest.TestCase):
                         ):
                             operation()
 
+    def test_managed_lifecycle_rejects_invalid_control_endpoints(self):
+        for endpoint in (None, 1, "", "\0"):
+            with self.subTest(endpoint=endpoint):
+                with self.assertRaisesRegex(
+                    common.ScriptError, "invalid control endpoint"
+                ):
+                    sandbox_lifecycle._endpoint({"control_endpoint": endpoint})
+
     def test_managed_start_fails_closed_without_openvmm_identity(self):
         def require(path: Path, _description: str) -> Path:
             return path

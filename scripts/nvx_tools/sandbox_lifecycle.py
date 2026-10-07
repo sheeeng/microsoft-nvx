@@ -435,9 +435,12 @@ def _load_running(state_dir: Path) -> tuple[dict[str, Any], bytes]:
 
 def _endpoint(runtime: dict[str, Any]) -> Path:
     try:
-        return Path(str(runtime["control_endpoint"]))
+        endpoint = runtime["control_endpoint"]
     except KeyError as error:
         raise ScriptError("sandbox runtime state has no control endpoint") from error
+    if not isinstance(endpoint, str) or not endpoint or "\0" in endpoint:
+        raise ScriptError("sandbox runtime state has an invalid control endpoint")
+    return Path(endpoint)
 
 
 def provision(
