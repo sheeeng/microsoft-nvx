@@ -16336,6 +16336,24 @@ class DownloadTests(unittest.TestCase):
 
             self.assertEqual(destination.read_bytes(), payload)
 
+    def test_reports_failure_to_discard_mismatched_cached_archive(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            destination = Path(temporary) / "archive.tar.xz"
+            destination.write_bytes(b"corrupt archive")
+
+            with (
+                patch.object(Path, "unlink", side_effect=OSError("permission denied")),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "failed to discard invalid cached download",
+                ),
+            ):
+                common.download_verified(
+                    "https://example.invalid/archive.tar.xz",
+                    destination,
+                    hashlib.sha256(b"verified archive").hexdigest(),
+                )
+
 
 if __name__ == "__main__":
     unittest.main()
