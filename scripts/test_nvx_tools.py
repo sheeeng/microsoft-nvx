@@ -4942,6 +4942,19 @@ class AlpineSourceCollectionTests(unittest.TestCase):
 
                 self.assertIn("package manifest", str(context.exception))
 
+    def test_package_manifest_requires_packages_array(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            manifest = Path(temporary) / "packages.json"
+            manifest.write_text(
+                json.dumps({"guest": AlpineBuildConstants.GUEST_NAME}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                collect_alpine_sources.SourceError, "has no packages array"
+            ):
+                collect_alpine_sources._load_packages([manifest])
+
     def test_recipe_symlink_is_collected_as_verified_regular_file(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
