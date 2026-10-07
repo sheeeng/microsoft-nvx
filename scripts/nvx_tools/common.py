@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import math
 import os
 import platform
 import re
@@ -42,6 +43,15 @@ def strict_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
 def positive_int(value: str, *, message: str = "must be greater than zero") -> int:
     parsed = int(value)
     if parsed <= 0:
+        raise argparse.ArgumentTypeError(message)
+    return parsed
+
+
+def positive_float(
+    value: str, *, message: str = "must be finite and greater than 0"
+) -> float:
+    parsed = float(value)
+    if not math.isfinite(parsed) or parsed <= 0:
         raise argparse.ArgumentTypeError(message)
     return parsed
 

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import math
 import os
@@ -51,6 +52,7 @@ from nvx_tools.build_constants import (
 )
 from nvx_tools.common import (
     ScriptError,
+    positive_float,
     positive_int,
     remaining_timeout,
     require_tool,
@@ -83,11 +85,7 @@ def local_executor_environment() -> dict[str, str]:
     return environment
 
 
-def _positive_float(value: str) -> float:
-    parsed = float(value)
-    if not math.isfinite(parsed) or parsed <= 0:
-        raise argparse.ArgumentTypeError("must be greater than zero")
-    return parsed
+_positive_float = positive_float
 
 
 def _nonnegative_int(value: str) -> int:
@@ -1873,7 +1871,7 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--campaign", choices=CAMPAIGNS, required=True)
     parser.add_argument(
         "--budget-seconds",
-        type=_positive_float,
+        type=functools.partial(_positive_float, message="must be greater than zero"),
         default=900.0,
         help="total wall-clock budget including preflight and minimization",
     )
@@ -1905,13 +1903,13 @@ def configure_parser(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--memory-mib", type=_memory_mib, default=256)
     parser.add_argument(
         "--phase-timeout",
-        type=_positive_float,
+        type=functools.partial(_positive_float, message="must be greater than zero"),
         default=60.0,
         help="timeout passed to each deterministic microVM scenario phase",
     )
     parser.add_argument(
         "--action-timeout",
-        type=_positive_float,
+        type=functools.partial(_positive_float, message="must be greater than zero"),
         default=600.0,
         help="outer timeout for one broker action or canary boot",
     )

@@ -14,7 +14,6 @@ import datetime as dt
 import errno
 import ipaddress
 import json
-import math
 import os
 import queue
 import re
@@ -41,7 +40,7 @@ from .build_constants import (
     KernelBuildConstants,
     OpenVMMBuildConstants,
 )
-from .common import bytes_to_mib, sha256_file
+from .common import bytes_to_mib, positive_float, sha256_file
 from .time_abi import TimeAbiFailure, TimeAbiMonitor, status_script
 
 BOOT_MARKER = b"ALPINE-MICROVM-BOOT-OK"
@@ -535,13 +534,6 @@ def apply_benchmark_suite_defaults(args: argparse.Namespace) -> None:
             else SHELL_SNAPSHOT_MEMORY_MIB
         )
         args.shell_memories = list(default)
-
-
-def positive_float(value: str) -> float:
-    parsed = float(value)
-    if not math.isfinite(parsed) or parsed <= 0:
-        raise argparse.ArgumentTypeError("must be finite and greater than 0")
-    return parsed
 
 
 def nonnegative_int(value: str) -> int:
