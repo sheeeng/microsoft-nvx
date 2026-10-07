@@ -11,7 +11,7 @@ import ssl
 import subprocess
 import sys
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from . import ubuntu
 from .build_config import (
@@ -683,14 +683,30 @@ def _pack_initramfs(root: Path, output: Path) -> None:
     require_tool("gzip")
     _normalize_initramfs_metadata(root)
     output.parent.mkdir(parents=True, exist_ok=True)
+    processes: list[subprocess.Popen[Any]] = []
     with output.open("wb") as archive:
-        finder = subprocess.Popen(
+
+        def start_process(*args: Any, **kwargs: Any) -> subprocess.Popen[Any]:
+            try:
+                process = subprocess.Popen(*args, **kwargs)
+            except BaseException:
+                for running in processes:
+                    if running.poll() is None:
+                        running.terminate()
+                for running in processes:
+                    running.wait()
+                output.unlink(missing_ok=True)
+                raise
+            processes.append(process)
+            return process
+
+        finder = start_process(
             ["find", ".", "-print0"], cwd=root, stdout=subprocess.PIPE
         )
         assert finder.stdout is not None
         sort_environment = os.environ.copy()
         sort_environment["LC_ALL"] = "C"
-        sorter = subprocess.Popen(
+        sorter = start_process(
             ["sort", "-z"],
             cwd=root,
             stdin=finder.stdout,
@@ -699,7 +715,7 @@ def _pack_initramfs(root: Path, output: Path) -> None:
         )
         finder.stdout.close()
         assert sorter.stdout is not None
-        cpio = subprocess.Popen(
+        cpio = start_process(
             [
                 "cpio",
                 "--null",
@@ -716,7 +732,7 @@ def _pack_initramfs(root: Path, output: Path) -> None:
         )
         sorter.stdout.close()
         assert cpio.stdout is not None
-        gzip = subprocess.Popen(
+        gzip = start_process(
             ["gzip", "-n", f"-{InitramfsBuildConstants.GZIP_COMPRESSION_LEVEL}"],
             stdin=cpio.stdout,
             stdout=archive,

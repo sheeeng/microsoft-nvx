@@ -5346,6 +5346,43 @@ class AlpineSourceCollectionTests(unittest.TestCase):
 
 
 class BuildTests(unittest.TestCase):
+    def test_pack_initramfs_stops_pipeline_when_stage_start_fails(self):
+        class FakeProcess:
+            def __init__(self):
+                self.stdout = MagicMock()
+                self.terminated = False
+
+            def poll(self):
+                return None if not self.terminated else -15
+
+            def terminate(self):
+                self.terminated = True
+
+            def wait(self):
+                return 0
+
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary) / "root"
+            root.mkdir()
+            output = Path(temporary) / "initramfs.cpio.gz"
+            finder = FakeProcess()
+            with (
+                patch.object(
+                    build, "require_tool", side_effect=["find", "sort", "cpio", "gzip"]
+                ),
+                patch.object(build, "_normalize_initramfs_metadata"),
+                patch.object(
+                    build.subprocess,
+                    "Popen",
+                    side_effect=[finder, OSError("cannot start sort")],
+                ),
+            ):
+                with self.assertRaisesRegex(OSError, "cannot start sort"):
+                    build._pack_initramfs(root, output)
+
+            self.assertTrue(finder.terminated)
+            self.assertFalse(output.exists())
+
     def test_build_config_owns_standard_runtime_paths(self):
         config = build_config.BuildConfig()
         alpine = config.initramfs_config("alpine")
