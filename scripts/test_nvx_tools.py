@@ -6221,6 +6221,14 @@ class BuildTests(unittest.TestCase):
             ):
                 ubuntu.load_package_lock(path)
 
+    def test_ubuntu_package_lock_hash_read_errors_are_actionable(self):
+        path = Path("/unreadable/packages.json")
+        with patch.object(Path, "read_bytes", side_effect=OSError("permission denied")):
+            with self.assertRaisesRegex(
+                common.ScriptError, "failed to read Ubuntu package lock"
+            ):
+                ubuntu.package_lock_sha256(path)
+
     def test_ubuntu_safe_extractor_rejects_archive_symlink_escape(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
