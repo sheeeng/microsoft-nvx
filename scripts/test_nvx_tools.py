@@ -6243,6 +6243,18 @@ class BuildTests(unittest.TestCase):
                 )
             self.assertFalse((root / "outside").exists())
 
+    def test_ubuntu_safe_extractor_reports_unreadable_archive(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            archive_path = Path(temporary) / "missing.tar.gz"
+            with self.assertRaisesRegex(
+                common.ScriptError, "failed to read test archive"
+            ):
+                ubuntu.safe_extract_tar(
+                    archive_path,
+                    Path(temporary) / "extracted",
+                    label="test archive",
+                )
+
     def test_ubuntu_safe_extractor_roots_absolute_symlinks(self):
         self.assertEqual(
             ubuntu._virtual_symlink_target(

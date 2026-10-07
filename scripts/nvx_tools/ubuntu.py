@@ -396,6 +396,8 @@ def safe_extract_tar(path: Path, destination: Path, *, label: str) -> None:
             _safe_extract_open_tar(archive, destination, label=label)
     except tarfile.TarError as error:
         raise ScriptError(f"invalid {label}: {error}") from error
+    except OSError as error:
+        raise ScriptError(f"failed to read {label}: {error}") from error
 
 
 def _decompress_tar_member(name: str, data: bytes) -> bytes:
