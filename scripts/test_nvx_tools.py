@@ -14460,6 +14460,17 @@ AUTHORIZATION_VALUE = "Bearer placeholder-value"
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_json_object_rejects_invalid_utf8_as_script_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "manifest.json"
+            path.write_bytes(b"\xff")
+
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                "invalid release manifest",
+            ):
+                release._read_json_object(path, "release manifest")
+
     def test_alpine_source_validation_rejects_malformed_manifest(self):
         with tempfile.TemporaryDirectory() as temporary:
             source_dir = Path(temporary)
