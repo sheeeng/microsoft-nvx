@@ -198,9 +198,12 @@ def require_tool(name: str, message: str | None = None) -> str:
 
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
-    with path.open("rb") as source:
-        while chunk := source.read(1024 * 1024):
-            digest.update(chunk)
+    try:
+        with path.open("rb") as source:
+            while chunk := source.read(1024 * 1024):
+                digest.update(chunk)
+    except OSError as error:
+        raise ScriptError(f"failed to read file for SHA-256: {path}") from error
     return digest.hexdigest()
 
 

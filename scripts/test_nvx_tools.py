@@ -15890,6 +15890,19 @@ class GitOutputTests(unittest.TestCase):
 
 
 class SharedFileTests(unittest.TestCase):
+    def test_sha256_file_reports_unreadable_input(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "payload"
+            path.write_bytes(b"payload")
+            with (
+                patch.object(Path, "open", side_effect=PermissionError("denied")),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "failed to read file for SHA-256",
+                ),
+            ):
+                common.sha256_file(path)
+
     def test_checksum_manifest_detects_modified_file(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
