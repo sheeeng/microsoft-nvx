@@ -4834,6 +4834,23 @@ class UbuntuSourceCollectionTests(unittest.TestCase):
 
         self.assertIn("cannot read Ubuntu package manifest", str(context.exception))
 
+    def test_output_cleanup_failures_are_reported_as_script_errors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary)
+            (output / "packages").mkdir()
+            with (
+                patch.object(
+                    collect_ubuntu_sources.shutil,
+                    "rmtree",
+                    side_effect=PermissionError(13, "Permission denied"),
+                ),
+                self.assertRaisesRegex(
+                    collect_ubuntu_sources.ScriptError,
+                    "cannot remove previous Ubuntu source output",
+                ),
+            ):
+                collect_ubuntu_sources._reset_source_output(output)
+
 
 class AlpineSourceCollectionTests(unittest.TestCase):
     INSTALL_SCRIPT = b"#!/bin/sh\nexit 0\n"

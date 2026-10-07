@@ -667,13 +667,23 @@ def _reset_source_output(output: Path) -> None:
                 f"Ubuntu source generated path is not a directory: {generated}"
             )
         if generated.exists():
-            shutil.rmtree(generated)
+            try:
+                shutil.rmtree(generated)
+            except OSError as error:
+                raise ScriptError(
+                    f"cannot remove previous Ubuntu source output {generated}: {error}"
+                ) from error
     for generated in (output / "manifest.json", output / "SHA256SUMS"):
         if generated.is_symlink() or (generated.exists() and not generated.is_file()):
             raise ScriptError(
                 f"Ubuntu source generated path is not a file: {generated}"
             )
-        generated.unlink(missing_ok=True)
+        try:
+            generated.unlink(missing_ok=True)
+        except OSError as error:
+            raise ScriptError(
+                f"cannot remove previous Ubuntu source output {generated}: {error}"
+            ) from error
 
 
 def _materialize_source_metadata(
