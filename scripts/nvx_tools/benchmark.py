@@ -537,6 +537,18 @@ def apply_benchmark_suite_defaults(args: argparse.Namespace) -> None:
         args.shell_memories = list(default)
 
 
+def _benchmark_suite_flags(
+    args: argparse.Namespace,
+) -> tuple[bool, bool, bool, bool, bool, bool]:
+    run_boot = args.suite in ("boot", "e2e", "all")
+    run_snapshot = args.suite in ("snapshot", "e2e", "all")
+    run_restore = args.suite in ("restore", "e2e", "all")
+    run_phase2 = args.suite in ("phase2", "all")
+    run_profile = args.suite == "snapshot-profile"
+    run_workloads = args.suite in WORKLOAD_SUITES
+    return run_boot, run_snapshot, run_restore, run_phase2, run_profile, run_workloads
+
+
 def positive_float(value: str) -> float:
     parsed = float(value)
     if not math.isfinite(parsed) or parsed <= 0:
@@ -5899,12 +5911,14 @@ def run_native_linux(args: argparse.Namespace) -> int:
 
     openvmm_dir = args.openvmm_dir.resolve()
     require_file(openvmm_dir / "Cargo.toml", "OpenVMM Cargo.toml")
-    run_boot = args.suite in ("boot", "e2e", "all")
-    run_snapshot = args.suite in ("snapshot", "e2e", "all")
-    run_restore = args.suite in ("restore", "e2e", "all")
-    run_phase2 = args.suite in ("phase2", "all")
-    run_profile = args.suite == "snapshot-profile"
-    run_workloads = args.suite in WORKLOAD_SUITES
+    (
+        run_boot,
+        run_snapshot,
+        run_restore,
+        run_phase2,
+        run_profile,
+        run_workloads,
+    ) = _benchmark_suite_flags(args)
     run_guest = run_boot or run_snapshot or run_restore or run_profile or run_workloads
     kernel = None
     initrd = None
@@ -6362,12 +6376,14 @@ def run_benchmark(args: argparse.Namespace) -> int:
 
     openvmm_dir = args.openvmm_dir.resolve()
     require_file(openvmm_dir / "Cargo.toml", "OpenVMM Cargo.toml")
-    run_boot = args.suite in ("boot", "e2e", "all")
-    run_snapshot = args.suite in ("snapshot", "e2e", "all")
-    run_restore = args.suite in ("restore", "e2e", "all")
-    run_phase2 = args.suite in ("phase2", "all")
-    run_profile = args.suite == "snapshot-profile"
-    run_workloads = args.suite in WORKLOAD_SUITES
+    (
+        run_boot,
+        run_snapshot,
+        run_restore,
+        run_phase2,
+        run_profile,
+        run_workloads,
+    ) = _benchmark_suite_flags(args)
     if run_workloads and args.backend != "whp":
         raise ValueError(
             "Windows workload suites require --backend whp; run KVM/MSHV "
