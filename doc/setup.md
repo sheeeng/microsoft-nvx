@@ -53,6 +53,11 @@ sudo apt-get install -y \
 `musl-tools` provides `musl-gcc`, which native initramfs builds use for the
 guest time tools; Docker builds install it in the build image.
 
+The default `build-guest` workflow uses Docker, so Linux development also
+requires Docker Engine with permission to run the `docker` command. Pass
+`--native` to build supported guests without Docker; Azure Linux requires the
+Docker workflow.
+
 ### Linux / KVM
 
 Enable Intel VT-x or AMD-V in the host firmware. Linux normally loads the matching KVM kernel
