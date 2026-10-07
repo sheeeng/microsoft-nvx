@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import argparse
+import functools
 import json
 import math
 import os
@@ -46,6 +47,7 @@ from nvx_tools.adversarial_oracles import (
     sha256_file,
     terminate_process_tree,
 )
+from nvx_tools.benchmark import positive_float
 from nvx_tools.build_constants import (
     BuildConstants,
 )
@@ -55,9 +57,7 @@ from nvx_tools.common import (
     remaining_timeout,
     require_tool,
 )
-from nvx_tools.common import (
-    repository_metadata as _controller_metadata,
-)
+from nvx_tools.common import repository_metadata as _controller_metadata
 from nvx_tools.release import verify_source_tree
 
 COPILOT_CREDIT_RESERVATION = 30
@@ -83,11 +83,7 @@ def local_executor_environment() -> dict[str, str]:
     return environment
 
 
-def _positive_float(value: str) -> float:
-    parsed = float(value)
-    if not math.isfinite(parsed) or parsed <= 0:
-        raise argparse.ArgumentTypeError("must be greater than zero")
-    return parsed
+_positive_float = functools.partial(positive_float, message="must be greater than zero")
 
 
 def _nonnegative_int(value: str) -> int:

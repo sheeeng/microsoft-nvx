@@ -537,10 +537,14 @@ def apply_benchmark_suite_defaults(args: argparse.Namespace) -> None:
         args.shell_memories = list(default)
 
 
-def positive_float(value: str) -> float:
+def positive_float(
+    value: str,
+    *,
+    message: str = "must be finite and greater than 0",
+) -> float:
     parsed = float(value)
     if not math.isfinite(parsed) or parsed <= 0:
-        raise argparse.ArgumentTypeError("must be finite and greater than 0")
+        raise argparse.ArgumentTypeError(message)
     return parsed
 
 
