@@ -443,6 +443,13 @@ def _same_profile_lineage(selected: str, expected: str) -> bool:
     return re.fullmatch(rf"{lineage}\.v\d+", selected) is not None
 
 
+def _last_output_line(output: str) -> str:
+    return next(
+        (line.strip() for line in reversed(output.splitlines()) if line.strip()),
+        "no output",
+    )
+
+
 def _check_cpu_profile(context: DoctorContext) -> tuple[str, str, str, list[str]]:
     """Fingerprint the host with OpenVMM and check the profile that it
     selects. Return the generation and the profile as OpenVMM reports them,
@@ -486,10 +493,7 @@ def _check_cpu_profile(context: DoctorContext) -> tuple[str, str, str, list[str]
         None,
     )
     if line is None:
-        last = next(
-            (line.strip() for line in reversed(output.splitlines()) if line.strip()),
-            "no output",
-        )
+        last = _last_output_line(output)
         if "--cpu-fingerprint" in output and "unexpected argument" in output:
             last = "this OpenVMM predates the --cpu-fingerprint tool"
         return (
@@ -598,10 +602,7 @@ def check_openvmm_preflight(context: DoctorContext) -> CheckResult:
         None,
     )
     if verify is None:
-        last = next(
-            (line.strip() for line in reversed(output.splitlines()) if line.strip()),
-            "no output",
-        )
+        last = _last_output_line(output)
         if "unexpected argument '--x-time-abi-verify'" in output:
             last = "this OpenVMM predates the time ABI's --x-time-abi-verify mode"
         return CheckResult(
