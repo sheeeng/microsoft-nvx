@@ -55,7 +55,7 @@ Build the Azure Linux initramfs through Docker:
 python3 scripts/nvx.py build-initramfs --guest azurelinux
 ```
 
-The default build produces:
+After building the guest artifacts and OpenVMM, the build produces:
 
 ```text
 build/vmlinux
