@@ -171,8 +171,9 @@ Install the pinned Python development tools:
 python3 -m pip install --requirement requirements-dev.txt
 ```
 
-Install ShellCheck 0.11.0 and shfmt 3.12.0 using the platform package manager
-to match the versions enforced in CI.
+Install ShellCheck and shfmt using the platform package manager. CI runs pinned
+ShellCheck and shfmt container images from
+[`check-quality`](../.github/actions/check-quality/action.yml).
 
 Run all lint and formatting checks before submitting a change:
 
