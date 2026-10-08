@@ -2456,6 +2456,13 @@ class DoctorTests(unittest.TestCase):
             with self.assertRaisesRegex(doctor.ScriptError, "E0425"):
                 doctor.build_probe(self.root)
 
+    def test_default_probe_directory_uses_build_artifact_path(self):
+        with patch.dict(doctor.os.environ, {}, clear=True):
+            self.assertEqual(
+                doctor.default_probe_directory(),
+                doctor.artifact_path("host-time-probe"),
+            )
+
     def test_parses_probe_records(self):
         context = doctor_context(self.root)
         context.probe = self.root / "probe.exe"

@@ -24,7 +24,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from .benchmark import run_guest_script, workload_boot_command
-from .build_constants import AlpineBuildConstants, BuildConstants, KernelBuildConstants
+from .build_constants import AlpineBuildConstants, KernelBuildConstants
 from .ci import OPENVMM_TEST_BACKENDS
 from .common import ScriptError, artifact_path, openvmm_binary_path
 from .time_abi import (
@@ -1102,7 +1102,7 @@ def default_probe_directory() -> Path:
     tool_cache = os.environ.get("RUNNER_TOOL_CACHE")
     if tool_cache:
         return Path(tool_cache) / "nvx-host-time-probe"
-    return BuildConstants.BUILD_DIR / "host-time-probe"
+    return artifact_path("host-time-probe")
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
