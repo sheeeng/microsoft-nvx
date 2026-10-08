@@ -197,6 +197,15 @@ def lifecycle_document(
 
 
 class PerformanceTests(unittest.TestCase):
+    def test_read_log_reports_missing_file(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "missing.log"
+            with self.assertRaisesRegex(
+                performance.PerformanceError,
+                r"cannot read benchmark log .*missing\.log",
+            ):
+                performance._read_log(path)
+
     def test_ci_one_vcpu_metric_count_matches_collectors(self):
         expected = len(
             performance.SHARED_METRICS | performance.LIFECYCLE_METRICS
