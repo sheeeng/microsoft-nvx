@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import platform
 import re
@@ -18,7 +19,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from http.client import HTTPMessage
 from pathlib import Path, PurePosixPath
-from typing import IO
+from typing import IO, cast
 
 from .build_constants import (
     BuildConstants,
@@ -37,6 +38,27 @@ def strict_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
             raise ScriptError(f"duplicate JSON property: {key}")
         result[key] = value
     return result
+
+
+def load_package_lock_document(
+    path: Path,
+    description: str,
+    expected_header: Mapping[str, object],
+) -> list[object]:
+    try:
+        raw_document = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
+        raise ScriptError(f"failed to read {description}: {path}") from error
+    if not isinstance(raw_document, dict):
+        raise ScriptError(f"{path} must contain a JSON object")
+    document = cast(dict[str, object], raw_document)
+    for field, expected in expected_header.items():
+        if document.get(field) != expected:
+            raise ScriptError(f"{path} {field} must be {expected!r}")
+    raw_packages = document.get("packages")
+    if not isinstance(raw_packages, list) or not raw_packages:
+        raise ScriptError(f"{path} must contain a nonempty packages array")
+    return cast(list[object], raw_packages)
 
 
 def positive_int(value: str, *, message: str = "must be greater than zero") -> int:

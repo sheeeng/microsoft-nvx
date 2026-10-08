@@ -28,6 +28,7 @@ from .common import (
     ScriptError,
     cache_root,
     download_verified,
+    load_package_lock_document,
     require_tool,
     sha256_file,
 )
@@ -109,28 +110,19 @@ def _required_string(
 def load_package_lock(
     path: Path = UbuntuBuildConstants.PACKAGE_LOCK,
 ) -> tuple[UbuntuLockedPackage, ...]:
-    try:
-        raw_document = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as error:
-        raise ScriptError(f"failed to read Ubuntu package lock: {path}") from error
-    if not isinstance(raw_document, dict):
-        raise ScriptError(f"{path} must contain a JSON object")
-    document = cast(dict[str, object], raw_document)
-    expected_header = {
-        "format": UbuntuBuildConstants.PACKAGE_LOCK_FORMAT,
-        "release": UbuntuBuildConstants.VERSION,
-        "codename": UbuntuBuildConstants.CODENAME,
-        "architecture": UbuntuBuildConstants.ARCHITECTURE,
-    }
-    for field, expected in expected_header.items():
-        if document.get(field) != expected:
-            raise ScriptError(f"{path} {field} must be {expected!r}")
-    raw_packages = document.get("packages")
-    if not isinstance(raw_packages, list) or not raw_packages:
-        raise ScriptError(f"{path} must contain a nonempty packages array")
+    raw_packages = load_package_lock_document(
+        path,
+        "Ubuntu package lock",
+        {
+            "format": UbuntuBuildConstants.PACKAGE_LOCK_FORMAT,
+            "release": UbuntuBuildConstants.VERSION,
+            "codename": UbuntuBuildConstants.CODENAME,
+            "architecture": UbuntuBuildConstants.ARCHITECTURE,
+        },
+    )
     packages: list[UbuntuLockedPackage] = []
     names: set[str] = set()
-    for raw_package in cast(list[object], raw_packages):
+    for raw_package in raw_packages:
         if not isinstance(raw_package, dict):
             raise ScriptError(f"{path} contains a non-object package record")
         package_document = cast(dict[str, object], raw_package)
