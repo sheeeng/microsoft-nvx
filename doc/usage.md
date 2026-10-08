@@ -359,12 +359,13 @@ authenticated Copilot CLI selects one deterministic primitive at a time.
 Copilot has no tools or direct NVX access. The typed broker validates and
 records every action, while a credential-free executor and independent
 watchdog own VM operation, canaries, teardown checks, and the clean
-post-campaign boot.
+post-campaign boot. Select one of the three campaign values:
+`workload-isolation`, `guest-isolation`, or `snapshot-isolation`.
 
 | Option | Default | Description |
 | --- | --- | --- |
 | `--backend` | required | Select KVM or MSHV on Linux, or WHP on Windows. |
-| `--campaign` | required | Select workload, privileged-guest, or snapshot boundary probes. |
+| `--campaign` | required | Select workload, guest, or snapshot isolation probes. |
 | `--budget-seconds` | `900` | Bound preflight, actions, canary boot, and minimization wall time. |
 | `--budget-actions` | `8` | Bound accepted and executed broker actions. |
 | `--budget-ai-credits` | `300` | Bound charged Copilot usage; the minimum is 60 credits so authentication preflight and at least one action each retain a 30-credit CLI cap. |
