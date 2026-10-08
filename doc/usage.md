@@ -659,7 +659,7 @@ python3 scripts/nvx.py benchmark [OPTIONS]
 | `--device-io-port PORT` | `5201` | Set the same-host UDP echo port. |
 | `--net IPV4/PREFIX` | none | Enable virtio-net with a static guest address. |
 | `--network-profile {portable}` | none | Required with `--net`; selects the portable KVM/MSHV/WHP contract. |
-| `--cpus CPUSET` | one logical CPU per physical core | Set process affinity in `taskset` syntax. |
+| `--cpus CPUSET` | one representative logical CPU per physical core | Set process affinity in `taskset` syntax; on Linux, the default is the lowest-numbered CPU in each thread-sibling set. |
 | `--host-cpu-reserve N` | `2` | Require this many affinity CPUs beyond the guest vCPU count for VMM/device work. |
 | `--timeout SECONDS` | `10` | Set the time allowed for each boot marker. |
 | `--teardown-mode {guest-exit,host-terminate,host-sigterm}` | `guest-exit` | Select how to stop a measured VM; `host-sigterm` is a deprecated alias. |
