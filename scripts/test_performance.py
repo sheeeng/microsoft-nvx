@@ -485,6 +485,16 @@ class PerformanceTests(unittest.TestCase):
                                 "linux-kvm-baremetal", source
                             )
 
+    def test_openvmm_json_reports_unreadable_result(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "acceptance.json"
+            source.mkdir()
+            with self.assertRaisesRegex(
+                performance.PerformanceError,
+                r"cannot read benchmark result.*Is a directory",
+            ):
+                performance.read_lifecycle_data("linux-kvm-baremetal", source)
+
     def test_openvmm_json_requires_the_platform_backend(self):
         with tempfile.TemporaryDirectory() as temporary:
             source = Path(temporary) / "windows-whp-virtual-machine.json"
