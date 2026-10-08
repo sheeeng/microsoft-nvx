@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -435,6 +436,22 @@ def _write_release_fixture(
         "binary": binary,
     }
     return paths, kernel_inputs, revision
+
+
+class DoctorTests(unittest.TestCase):
+    def test_host_cpu_reports_unreadable_linux_cpu_information(self):
+        with (
+            patch.object(doctor, "host_is_windows", return_value=False),
+            patch.object(
+                doctor,
+                "_linux_cpuinfo",
+                side_effect=OSError("permission denied"),
+            ),
+            self.assertRaisesRegex(
+                common.ScriptError, "failed to read host CPU information"
+            ),
+        ):
+            doctor.host_cpu(MagicMock())
 
 
 class CliTests(unittest.TestCase):
