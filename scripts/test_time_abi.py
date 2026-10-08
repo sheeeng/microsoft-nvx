@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from nvx_tools import benchmark, doctor, openvmm_process, time_abi  # noqa: E402
+from nvx_tools import benchmark, common, doctor, openvmm_process, time_abi  # noqa: E402
 from nvx_tools.time_abi import TimeAbiFailure, TimeAbiMonitor  # noqa: E402
 
 BOOT_LINE = (
@@ -2435,11 +2435,11 @@ class DoctorTests(unittest.TestCase):
             Path(command[command.index("-o") + 1]).write_bytes(b"probe")
             return completed("")
 
-        with patch.object(doctor.shutil, "which", return_value=None):
+        with patch.object(common.shutil, "which", return_value=None):
             with self.assertRaisesRegex(doctor.ScriptError, "rustc is required"):
                 doctor.build_probe(self.root)
         with (
-            patch.object(doctor.shutil, "which", return_value="rustc"),
+            patch.object(common.shutil, "which", return_value="rustc"),
             patch.object(doctor.subprocess, "run", side_effect=rustc) as run,
         ):
             self.assertEqual(doctor.build_probe(self.root), target)
@@ -2448,7 +2448,7 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(target.read_bytes(), b"probe")
         target.unlink()
         with (
-            patch.object(doctor.shutil, "which", return_value="rustc"),
+            patch.object(common.shutil, "which", return_value="rustc"),
             patch.object(
                 doctor.subprocess, "run", return_value=completed("", 1, "error[E0425]")
             ),
