@@ -41,7 +41,7 @@ from .build_constants import (
     KernelBuildConstants,
     OpenVMMBuildConstants,
 )
-from .common import bytes_to_mib, sha256_file
+from .common import ScriptError, bytes_to_mib, sha256_file
 from .time_abi import TimeAbiFailure, TimeAbiMonitor, status_script
 
 BOOT_MARKER = b"ALPINE-MICROVM-BOOT-OK"
@@ -1728,15 +1728,21 @@ def record_adversarial_openvmm_pid(
     pid_journal = environment.get("NVX_ADVERSARIAL_OPENVMM_PID_JOURNAL")
     if pid_journal is None:
         return
-    with Path(pid_journal).open("a", encoding="utf-8", newline="\n") as stream:
-        record = json.dumps(
-            {"pid": pid, "recorded_at_ns": time.time_ns()},
-            sort_keys=True,
-            separators=(",", ":"),
-        )
-        stream.write(f"{record}\n")
-        stream.flush()
-        os.fsync(stream.fileno())
+    path = Path(pid_journal)
+    try:
+        with path.open("a", encoding="utf-8", newline="\n") as stream:
+            record = json.dumps(
+                {"pid": pid, "recorded_at_ns": time.time_ns()},
+                sort_keys=True,
+                separators=(",", ":"),
+            )
+            stream.write(f"{record}\n")
+            stream.flush()
+            os.fsync(stream.fileno())
+    except OSError as error:
+        raise ScriptError(
+            f"cannot record OpenVMM PID {pid} in {path}: {error}"
+        ) from error
 
 
 def cleanup_managed_tap(pid: int) -> None:

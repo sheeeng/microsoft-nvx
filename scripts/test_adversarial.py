@@ -1154,7 +1154,10 @@ class AdversarialOracleTests(unittest.TestCase):
                 ),
                 patch("nvx_tools.benchmark.sys.platform", "win32"),
                 patch("nvx_tools.benchmark.terminate") as terminate,
-                self.assertRaises(OSError),
+                self.assertRaisesRegex(
+                    ScriptError,
+                    r"cannot record OpenVMM PID 4321 .*missing/openvmm-pids\.jsonl",
+                ),
             ):
                 InteractiveProcess(
                     ["openvmm"],
