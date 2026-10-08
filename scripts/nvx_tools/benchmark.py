@@ -3375,8 +3375,15 @@ def _append_device_io_record(path: Path | None, record: dict[str, object]) -> No
 
 def _read_device_io_records(path: Path) -> list[dict[str, object]]:
     records: list[dict[str, object]] = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        is_record, decoded = _decode_device_io_line(line)
+    for line_number, line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), 1
+    ):
+        try:
+            is_record, decoded = _decode_device_io_line(line)
+        except json.JSONDecodeError as error:
+            raise ValueError(
+                f"invalid device I/O record at {path}:{line_number}: {error}"
+            ) from error
         if is_record and isinstance(decoded, dict):
             records.append(cast(dict[str, object], decoded))
     return records

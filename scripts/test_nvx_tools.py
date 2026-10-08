@@ -14093,6 +14093,16 @@ class BenchmarkTests(unittest.TestCase):
             retained = [record for record in records if not record["warmup"]]
             self.assertEqual([record["sample_index"] for record in retained], [0, 0, 0])
 
+    def test_device_io_record_reader_rejects_malformed_prefixed_lines(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "device-io.log"
+            output.write_text(
+                "NVX_DEVICE_IO_RESULT={malformed}\n",
+                encoding="utf-8",
+            )
+            with self.assertRaisesRegex(ValueError, rf"{output}:1"):
+                benchmark._read_device_io_records(output)
+
     def test_device_io_missing_guest_result_becomes_failure(self):
         result: benchmark.GuestCommandResult = {
             "text": (
