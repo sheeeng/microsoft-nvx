@@ -699,7 +699,10 @@ def _window_rate(points: Sequence[tuple[int, int, float]], clock_hz: int) -> flo
 def check_rate(context: DoctorContext) -> CheckResult:
     clocksource = ""
     if not host_is_windows():
-        clocksource = host_clocksource()
+        try:
+            clocksource = host_clocksource()
+        except (OSError, UnicodeError) as error:
+            raise ScriptError(f"cannot read host clocksource: {error}") from error
         context.facts["host_clocksource"] = clocksource
     schedule = context.schedule
     records = run_probe(

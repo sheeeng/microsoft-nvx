@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -438,6 +439,24 @@ def _write_release_fixture(
 
 
 class CliTests(unittest.TestCase):
+    def test_doctor_reports_unreadable_host_clocksource(self):
+        context = doctor.DoctorContext(
+            backend="kvm",
+            openvmm=Path("openvmm"),
+            kernel=Path("vmlinux"),
+            initrd=Path("initrd"),
+            openvmm_args=(),
+            probe_directory=Path("probe"),
+            timeout=1.0,
+        )
+        with patch.object(
+            doctor, "host_clocksource", side_effect=OSError("permission denied")
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError, "cannot read host clocksource: permission denied"
+            ):
+                doctor.check_rate(context)
+
     def test_usage_documents_every_command_and_option(self):
         # doc/usage.md is the CLI reference: every command has a row in its
         # command table and a section that names exactly the options of the
