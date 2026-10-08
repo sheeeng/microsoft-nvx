@@ -391,7 +391,7 @@ Alpine guest with the crate's OpenVMM backend. It also checks cancellation,
 that guest state lasts only until a stop, that a start terminates the VM of an
 interrupted earlier start, host path mappings, egress rules, and per-execution
 environments and working directories. On failure
-it keeps the OpenVMM log under `build/test-results/aci-edge-sandboxes-<backend>`, which is
+it keeps the OpenVMM log under `build/test-results/aci_edge_sandboxes`, which is
 uploaded with the other microVM logs. Changes under `aci_edge_sandboxes/` therefore trigger
 the backend matrices.
 
