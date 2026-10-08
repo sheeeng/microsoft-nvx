@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -16242,6 +16243,20 @@ class SharedFileTests(unittest.TestCase):
             self.assertNotIn("bundle/__pycache__", {member.name for member in members})
             self.assertTrue(all(member.mtime == 0 for member in members))
             self.assertTrue(all(member.uid == member.gid == 0 for member in members))
+
+
+class DoctorTests(unittest.TestCase):
+    def test_host_clocksource_reports_read_errors(self):
+        with patch.object(
+            Path,
+            "read_text",
+            side_effect=OSError("permission denied"),
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                "cannot read host clocksource .*permission denied",
+            ):
+                doctor.host_clocksource()
 
 
 class DownloadTests(unittest.TestCase):
