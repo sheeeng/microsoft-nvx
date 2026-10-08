@@ -14476,6 +14476,33 @@ class ReleaseTests(unittest.TestCase):
             ):
                 release._validate_alpine_sources([])
 
+    def test_alpine_source_validation_rejects_malformed_package_manifest(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source_dir = Path(temporary)
+            alpine_dir = source_dir / "alpine"
+            alpine_dir.mkdir()
+            (alpine_dir / "manifest.json").write_text(
+                json.dumps(
+                    {
+                        "format": AlpineBuildConstants.SOURCE_MANIFEST_FORMAT,
+                        "packages": [],
+                        "executables": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            package_manifest = source_dir / "packages.json"
+            package_manifest.write_text("{", encoding="utf-8")
+
+            with (
+                patch.object(BuildConstants, "SOURCE_DIR", source_dir),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "invalid Alpine package manifest packages.json",
+                ),
+            ):
+                release._validate_alpine_sources([package_manifest])
+
     def test_alpine_source_validation_checks_recorded_executables(self):
         with tempfile.TemporaryDirectory() as temporary:
             source_dir = Path(temporary)
