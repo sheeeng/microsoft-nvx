@@ -2478,6 +2478,18 @@ class DoctorTests(unittest.TestCase):
             with self.assertRaisesRegex(doctor.ScriptError, "skew failed: no CPU"):
                 doctor.run_probe(context, "skew")
 
+    def test_reports_unreadable_host_clocksource(self):
+        with patch.object(
+            doctor.Path,
+            "read_text",
+            side_effect=OSError("permission denied"),
+        ):
+            with self.assertRaisesRegex(
+                doctor.ScriptError,
+                "failed to read host clocksource",
+            ):
+                doctor.host_clocksource()
+
 
 def doctor_parser():
     import argparse
