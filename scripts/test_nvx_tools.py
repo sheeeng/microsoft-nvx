@@ -14567,6 +14567,24 @@ class ReleaseTests(unittest.TestCase):
                 },
             )
 
+    def test_source_archive_reports_output_filesystem_errors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source.txt"
+            source.write_text("source", encoding="utf-8")
+
+            with (
+                patch.object(Path, "mkdir", side_effect=OSError("permission denied")),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    r"failed to create source archive .*permission denied",
+                ),
+            ):
+                archive.create_reproducible_tar_gz(
+                    root / "archive.tar.gz",
+                    [(source, "source.txt")],
+                )
+
     def test_selects_latest_matching_prerelease_asset(self):
         releases = [
             {
