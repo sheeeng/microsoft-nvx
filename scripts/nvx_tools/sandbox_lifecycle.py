@@ -402,10 +402,10 @@ def _process_running(pid: int, start_time: int | None) -> bool:
 
 
 def _runtime_process(runtime: dict[str, Any]) -> tuple[int, int | None]:
-    try:
-        pid = int(runtime["pid"])
-    except (KeyError, TypeError, ValueError) as error:
-        raise ScriptError("sandbox runtime state has an invalid process ID") from error
+    pid_value = runtime.get("pid")
+    if not isinstance(pid_value, int) or isinstance(pid_value, bool) or pid_value <= 0:
+        raise ScriptError("sandbox runtime state has an invalid process ID")
+    pid = pid_value
     start_time = runtime.get("start_time")
     if start_time is not None and (
         not isinstance(start_time, int)

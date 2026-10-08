@@ -11184,6 +11184,24 @@ class SandboxTests(unittest.TestCase):
                         ):
                             operation()
 
+    def test_managed_lifecycle_rejects_invalid_process_ids(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)
+            for pid in (None, True, 1.5, "123", 0, -1):
+                with self.subTest(pid=pid):
+                    sandbox_lifecycle._write_json(
+                        state / sandbox_lifecycle.RUNTIME_NAME,
+                        {
+                            "format": sandbox_lifecycle.STATE_FORMAT,
+                            "pid": pid,
+                            "control_endpoint": "control.sock",
+                        },
+                    )
+                    with self.assertRaisesRegex(
+                        common.ScriptError, "invalid process ID"
+                    ):
+                        sandbox_lifecycle.stop(state, 10)
+
     def test_managed_start_fails_closed_without_openvmm_identity(self):
         def require(path: Path, _description: str) -> Path:
             return path
