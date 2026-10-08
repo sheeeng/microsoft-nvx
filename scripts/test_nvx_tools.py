@@ -11014,6 +11014,14 @@ class SandboxTests(unittest.TestCase):
             self.assertFalse((state / sandbox_lifecycle.CONTROL_SOCKET_NAME).exists())
             self.assertTrue((state / sandbox_lifecycle.OUTCOME_NAME).exists())
 
+    def test_runtime_state_rejects_invalid_control_endpoint(self):
+        for value in (None, 123, ""):
+            with self.subTest(value=value):
+                with self.assertRaisesRegex(
+                    common.ScriptError, "invalid control endpoint"
+                ):
+                    sandbox_lifecycle._endpoint({"control_endpoint": value})
+
     def test_process_identity_parses_linux_process_status(self):
         def status(state: bytes, start_time: bytes = b"98765") -> bytes:
             fields = b" ".join([state, *(b"0" for _ in range(18)), start_time, b"0"])
