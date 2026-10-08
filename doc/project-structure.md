@@ -16,7 +16,7 @@ are build products or caches and are not part of the tracked source tree. The
 | `ubuntu` | Pinned Ubuntu supplemental binary-package lock |
 | `azurelinux` | Checksum-pinned Azure Linux supplemental RPM lock |
 | `aci_edge_sandboxes` | Rust crate `aci_edge_sandboxes`: state-aware sandbox API with an OpenVMM backend |
-| `openvmm` | Private OpenVMM submodule pinned to `microvm/mshv` |
+| `openvmm` | Private OpenVMM submodule pinned to `main` |
 | `data` | Tracked performance history and generated benchmark data |
 | `scripts/nvx_tools` | Retained NVX build and benchmark implementation |
 | `scripts/nvx.py` | Canonical build, run, benchmark, and packaging CLI |
