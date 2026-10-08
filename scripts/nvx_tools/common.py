@@ -204,6 +204,13 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def sha256_normalized_file(path: Path) -> str:
+    contents = path.read_bytes().replace(b"\r\n", b"\n")
+    if b"\r" in contents:
+        raise ScriptError(f"{path} contains unsupported carriage returns")
+    return hashlib.sha256(contents).hexdigest()
+
+
 def _checksummed_tree_files(directory: Path) -> list[Path]:
     files: list[Path] = []
     for path in directory.rglob("*"):
