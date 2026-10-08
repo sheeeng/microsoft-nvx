@@ -101,6 +101,10 @@ For Ubuntu userland, use 512 MiB and select
 cannot unpack the whole Ubuntu initramfs and boots a truncated root. The
 kernel path remains unchanged.
 
+For Azure Linux userland, select
+`guest/initramfs-azurelinux.cpio.gz` or
+`build/initramfs-azurelinux.cpio.gz` as the initrd and use at least 512 MiB.
+
 Direct OpenVMM launches accept generic directional network defaults:
 
 ```bash
