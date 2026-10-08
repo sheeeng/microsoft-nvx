@@ -368,6 +368,7 @@ class TcpConsole:
                     raise TimeoutError(
                         f"failed to connect to virtio console at {address}"
                     ) from error
+                time.sleep(0.025)
 
     def _consume(self, chunk: bytes) -> None:
         self._output.extend(chunk)

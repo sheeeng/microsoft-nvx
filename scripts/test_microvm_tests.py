@@ -2445,6 +2445,23 @@ class MicrovmTests(unittest.TestCase):
         console.close()
         connected.close.assert_called_once_with()
 
+    def test_tcp_console_connect_delays_transient_connection_failures(self):
+        connected = MagicMock()
+        with (
+            patch.object(
+                openvmm_process.socket,
+                "create_connection",
+                side_effect=(OSError("not ready"), connected),
+            ),
+            patch.object(openvmm_process.time, "monotonic", side_effect=(0.0, 0.0)),
+            patch.object(openvmm_process.time, "sleep") as sleep,
+        ):
+            console = openvmm_process.TcpConsole.connect(("127.0.0.1", 1), 1.0)
+
+        sleep.assert_called_once_with(0.025)
+        console.close()
+        connected.close.assert_called_once_with()
+
     def test_every_openvmm_process_success_path_waits(self):
         # close() never raises, so a late violation or a 193-195 power-off is
         # only caught by wait(), which scans the output to EOF and checks the
