@@ -4834,6 +4834,20 @@ class UbuntuSourceCollectionTests(unittest.TestCase):
 
         self.assertIn("cannot read Ubuntu package manifest", str(context.exception))
 
+    def test_invalid_ar_member_name_is_reported_as_script_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            package = Path(temporary) / "package.deb"
+            header = bytearray(60)
+            header[:16] = b"\xff" + b" " * 15
+            header[48:58] = b"0         "
+            header[58:60] = b"`\n"
+            package.write_bytes(b"!<arch>\n" + header)
+
+            with self.assertRaises(ubuntu.ScriptError) as context:
+                ubuntu._read_ar_members(package)
+
+        self.assertIn("invalid ar member name", str(context.exception))
+
 
 class AlpineSourceCollectionTests(unittest.TestCase):
     INSTALL_SCRIPT = b"#!/bin/sh\nexit 0\n"
