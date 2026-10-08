@@ -137,7 +137,7 @@ class OpenvmmProcess:
         self._interaction.write_input(status_script().encode())
         deadline = time.monotonic() + STATUS_TIMEOUT_SECONDS
         while self._monitor.status_queries == 0:
-            remaining = deadline - time.monotonic()
+            remaining = remaining_timeout(deadline)
             if remaining <= 0:
                 self._fail(
                     TimeoutError(
@@ -180,7 +180,7 @@ class OpenvmmProcess:
                 return self._monitor.boot
             if phase == "restore" and self._monitor.restores:
                 return self._monitor.restores[-1]
-            remaining = deadline - time.monotonic()
+            remaining = remaining_timeout(deadline)
             if remaining <= 0:
                 self._fail(
                     TimeoutError(
@@ -221,7 +221,7 @@ class OpenvmmProcess:
             if marker_end is not None:
                 self._search_offset = marker_end
                 return
-            remaining = deadline - time.monotonic()
+            remaining = remaining_timeout(deadline)
             if remaining <= 0:
                 self._fail(
                     TimeoutError(
@@ -241,7 +241,7 @@ class OpenvmmProcess:
     def wait(self, timeout: float) -> OpenvmmProcessResult:
         deadline = time.monotonic() + timeout
         while True:
-            remaining = deadline - time.monotonic()
+            remaining = remaining_timeout(deadline)
             if remaining <= 0:
                 self._fail(
                     TimeoutError(
@@ -391,7 +391,7 @@ class TcpConsole:
         self._connection.sendall(status_script().encode())
         deadline = time.monotonic() + STATUS_TIMEOUT_SECONDS
         while self._monitor.status_queries == 0:
-            remaining = deadline - time.monotonic()
+            remaining = remaining_timeout(deadline)
             if remaining <= 0:
                 raise TimeoutError(
                     "nvx-time status did not exit within "
@@ -422,7 +422,7 @@ class TcpConsole:
             if index >= 0:
                 self._search_offset = index + len(marker)
                 return
-            remaining = deadline - time.monotonic()
+            remaining = remaining_timeout(deadline)
             if remaining <= 0:
                 raise TimeoutError(f"TCP console marker {marker!r} was not observed")
             self._connection.settimeout(min(remaining, 0.25))
