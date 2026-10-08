@@ -19,6 +19,9 @@ Build every guest artifact, including the Ubuntu EROFS distro layer, with:
 python3 scripts/nvx.py build-guest --guest all
 ```
 
+On Linux, pass `--native` to build Alpine or Ubuntu artifacts without Docker.
+Azure Linux remains Docker-only.
+
 The OpenVMM restore step excludes the compatibility IGVM artifact, which NVX
 does not build or package, so builds do not depend on unrelated upstream
 workflow artifacts.
