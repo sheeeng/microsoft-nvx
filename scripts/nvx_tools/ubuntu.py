@@ -861,11 +861,7 @@ def rootfs_sha256(root: Path) -> str:
             payload = b""
         elif path.is_file():
             kind = "file"
-            file_digest = hashlib.sha256()
-            with path.open("rb") as source:
-                while chunk := source.read(1024 * 1024):
-                    file_digest.update(chunk)
-            payload = file_digest.digest()
+            payload = bytes.fromhex(sha256_file(path))
         else:
             raise ScriptError(f"cannot fingerprint unsupported inode {path}")
         digest.update(f"{kind}\0{mode:o}\0{relative}\0".encode() + payload + b"\0")
