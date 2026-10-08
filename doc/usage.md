@@ -268,6 +268,9 @@ requires `build/vmlinux` (with `--debug-kernel`, `build/vmlinux-debug` and its
 `build/vmlinux-debug.config`), the selected initramfs, and
 `openvmm/target/release/openvmm[.exe]`.
 
+When `--processors` is omitted, the command runs processor-count scenarios for
+1, 2, 4, and 8 vCPUs.
+
 ### `doctor`
 
 ```text
