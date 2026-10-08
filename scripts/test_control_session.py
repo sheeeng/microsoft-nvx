@@ -67,6 +67,12 @@ def _write_app(
 
 
 class ControlSessionTests(unittest.TestCase):
+    @unittest.skipUnless(sys.platform != "win32", "Unix socket test")
+    def test_connect_rejects_invalid_unix_endpoint_without_waiting(self):
+        endpoint = Path("/tmp") / ("x" * 200)
+        with self.assertRaisesRegex(control_session.ScriptError, "failed to connect"):
+            control_session._SocketStream.connect(endpoint, timeout=5)
+
     def test_exec_streams_output_and_returns_bounded_status(self):
         client, server = socket.socketpair()
         instance = bytes.fromhex("11" * 16)

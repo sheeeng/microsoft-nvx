@@ -120,6 +120,15 @@ class _SocketStream:
                 return cls(connection)
             except OSError as error:
                 connection.close()
+                if error.errno not in (
+                    errno.ENOENT,
+                    errno.ECONNREFUSED,
+                    errno.EAGAIN,
+                    errno.EINTR,
+                ):
+                    raise ScriptError(
+                        f"failed to connect to managed control endpoint: {path}"
+                    ) from error
                 if time.monotonic() >= deadline:
                     raise TimeoutError(
                         f"managed control endpoint did not become available: {path}"
