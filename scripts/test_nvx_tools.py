@@ -5346,6 +5346,17 @@ class AlpineSourceCollectionTests(unittest.TestCase):
 
 
 class BuildTests(unittest.TestCase):
+    def test_kernel_config_read_errors_are_script_errors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "vmlinux.config"
+            path.write_bytes(b"\xff")
+
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                "failed to read kernel configuration",
+            ):
+                build._assert_kernel_config(path, (), "")
+
     def test_build_config_owns_standard_runtime_paths(self):
         config = build_config.BuildConfig()
         alpine = config.initramfs_config("alpine")

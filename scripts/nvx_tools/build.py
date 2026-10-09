@@ -81,10 +81,17 @@ def _run_openvmm_command(
 def _assert_kernel_config(
     path: Path, required: tuple[str, ...], error_prefix: str
 ) -> None:
-    configured = set(path.read_text(encoding="utf-8").splitlines())
+    configured = set(_read_kernel_config(path))
     missing = [setting for setting in required if setting not in configured]
     if missing:
         raise ScriptError(error_prefix + ", ".join(missing))
+
+
+def _read_kernel_config(path: Path) -> list[str]:
+    try:
+        return path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as error:
+        raise ScriptError(f"failed to read kernel configuration: {path}") from error
 
 
 def _assert_direct_boot_kernel_config(path: Path) -> None:
@@ -135,7 +142,7 @@ def _assert_hardening_kernel_config(path: Path) -> None:
     )
     modules = [
         line
-        for line in path.read_text(encoding="utf-8").splitlines()
+        for line in _read_kernel_config(path)
         if line.startswith("CONFIG_") and line.endswith("=m")
     ]
     if modules:
@@ -153,7 +160,7 @@ def _assert_watchdog_kernel_config(path: Path, *, debug: bool) -> None:
             "debug kernel configuration lacks the CI watchdogs: ",
         )
         return
-    configured = set(path.read_text(encoding="utf-8").splitlines())
+    configured = set(_read_kernel_config(path))
     enabled = [
         setting
         for setting in KernelBuildConstants.DEBUG_WATCHDOG_CONFIG
