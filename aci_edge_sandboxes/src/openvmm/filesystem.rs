@@ -338,13 +338,6 @@ pub(crate) fn plan(policy: &FilesystemPolicy) -> Result<Option<HostMapping>> {
 /// put a decoy at its path, and the next start would protect the decoy instead. The VM is
 /// stopped while this runs, so no workload can race with it.
 pub(crate) fn verify(mapping: &HostMapping) -> Result<()> {
-    let changed = |path: &Path| {
-        Err(Error::backend_error(format!(
-            "{} no longer names the host object it named at provision; deprovision the sandbox \
-             and provision it again",
-            path.display()
-        )))
-    };
     for bind in &mapping.binds {
         let Some(expected) = bind.identity else {
             continue;
@@ -354,21 +347,26 @@ pub(crate) fn verify(mapping: &HostMapping) -> Result<()> {
         } else {
             mapping.root.join(&bind.source)
         };
-        match platform::file_identity(&path) {
-            Ok((device, index)) if (FileIdentity { device, index }) == expected => {}
-            _ => return changed(&path),
-        }
+        verify_identity(&path, expected)?;
     }
     for (path, expected) in mapping.denied.iter().zip(&mapping.denied_identities) {
         let Some(expected) = expected else {
             continue;
         };
-        match platform::file_identity(path) {
-            Ok((device, index)) if (FileIdentity { device, index }) == *expected => {}
-            _ => return changed(path),
-        }
+        verify_identity(path, *expected)?;
     }
     Ok(())
+}
+
+fn verify_identity(path: &Path, expected: FileIdentity) -> Result<()> {
+    match platform::file_identity(path) {
+        Ok((device, index)) if (FileIdentity { device, index }) == expected => Ok(()),
+        _ => Err(Error::backend_error(format!(
+            "{} no longer names the host object it named at provision; deprovision the sandbox \
+             and provision it again",
+            path.display()
+        ))),
+    }
 }
 
 /// Applies OpenVMM's rules for hidden paths, so a policy that OpenVMM would refuse fails at
