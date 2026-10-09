@@ -218,7 +218,7 @@ class _NamedPipeStream:
     def read_exact(self, length: int, deadline: float) -> bytes:
         output = bytearray()
         while len(output) != length:
-            if time.monotonic() >= deadline:
+            if remaining_timeout(deadline) <= 0:
                 raise TimeoutError("managed control response timed out")
             available = self._available()
             if available == 0:
