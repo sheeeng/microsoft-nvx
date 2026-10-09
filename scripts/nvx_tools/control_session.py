@@ -115,7 +115,7 @@ class _SocketStream:
         while True:
             connection = socket.socket(cast(int, family), socket.SOCK_STREAM)
             try:
-                connection.settimeout(min(0.25, max(0.01, deadline - time.monotonic())))
+                connection.settimeout(min(0.25, max(0.01, remaining_timeout(deadline))))
                 connection.connect(os.fspath(path))
                 return cls(connection)
             except OSError as error:
