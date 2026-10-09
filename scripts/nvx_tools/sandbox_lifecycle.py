@@ -173,6 +173,11 @@ def _prepare_state_directory(path: Path, *, create: bool) -> Path:
     return resolved
 
 
+def _remove_runtime_files(state_dir: Path) -> None:
+    for name in (RUNTIME_NAME, CAPABILITY_NAME, CONTROL_SOCKET_NAME):
+        (state_dir / name).unlink(missing_ok=True)
+
+
 def _serialize_launch(
     launch: SandboxLaunch,
     *,
@@ -612,9 +617,7 @@ def start(state_path: Path, timeout: float) -> None:
             except subprocess.TimeoutExpired:
                 process.kill()
                 process.wait(timeout=5)
-        (state_dir / RUNTIME_NAME).unlink(missing_ok=True)
-        capability_path.unlink(missing_ok=True)
-        (state_dir / CONTROL_SOCKET_NAME).unlink(missing_ok=True)
+        _remove_runtime_files(state_dir)
         raise
     finally:
         log.close()
@@ -659,9 +662,7 @@ def stop(state_path: Path, timeout: float) -> dict[str, Any]:
     try:
         outcome = _read_openvmm_outcome(state_dir / OUTCOME_NAME)
     finally:
-        (state_dir / RUNTIME_NAME).unlink(missing_ok=True)
-        (state_dir / CAPABILITY_NAME).unlink(missing_ok=True)
-        (state_dir / CONTROL_SOCKET_NAME).unlink(missing_ok=True)
+        _remove_runtime_files(state_dir)
     return outcome
 
 
@@ -672,14 +673,8 @@ def deprovision(state_path: Path) -> None:
         runtime = _read_json(runtime_path, "sandbox runtime state")
         if _process_running(*_runtime_process(runtime)):
             raise ScriptError("sandbox must be stopped before deprovision")
-    for name in (
-        RUNTIME_NAME,
-        CAPABILITY_NAME,
-        CONTROL_SOCKET_NAME,
-        OUTCOME_NAME,
-        LOG_NAME,
-        CONFIG_NAME,
-    ):
+    _remove_runtime_files(state_dir)
+    for name in (OUTCOME_NAME, LOG_NAME, CONFIG_NAME):
         (state_dir / name).unlink(missing_ok=True)
     unknown = tuple(state_dir.iterdir())
     if unknown:
