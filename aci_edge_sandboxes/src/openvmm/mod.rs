@@ -298,6 +298,12 @@ impl OpenVmmBackend {
         )
     }
 
+    fn clear_failed_start(&self, sandbox_id: &SandboxId, child: process::Launched) {
+        if process::kill_child(child) {
+            let _ = self.store.clear_runtime(sandbox_id);
+        }
+    }
+
     /// Terminates a launch whose guest image lacks control features that this backend needs.
     ///
     /// An older image would boot and answer, but it would silently ignore host path mappings and
@@ -606,9 +612,7 @@ impl Backend for OpenVmmBackend {
             Ok(Some(start_time)) => start_time,
             outcome => {
                 // Keep the launch marker unless OpenVMM is gone, so recovery can retry.
-                if process::kill_child(child) {
-                    let _ = self.store.clear_runtime(sandbox_id);
-                }
+                self.clear_failed_start(sandbox_id, child);
                 let reason = match outcome {
                     Err(error) => format!("cannot identify the OpenVMM process: {error}"),
                     _ => "OpenVMM exited during startup".to_owned(),
@@ -632,9 +636,7 @@ impl Backend for OpenVmmBackend {
             .write_launch(sandbox_id, &identified)
             .and_then(|()| self.store.write_runtime(sandbox_id, &runtime))
         {
-            if process::kill_child(child) {
-                let _ = self.store.clear_runtime(sandbox_id);
-            }
+            self.clear_failed_start(sandbox_id, child);
             return Err(error);
         }
         process::detach_child(child);
