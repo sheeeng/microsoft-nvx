@@ -153,6 +153,19 @@ def _escape_markdown(text: str) -> str:
     return text.replace("|", "\\|").replace("\n", " ")
 
 
+def _output_line(output: str, prefix: str) -> tuple[str | None, str]:
+    lines = output.splitlines()
+    line = next(
+        (line.strip() for line in lines if line.strip().startswith(prefix)),
+        None,
+    )
+    last = next(
+        (line.strip() for line in reversed(lines) if line.strip()),
+        "no output",
+    )
+    return line, last
+
+
 def probe_path(directory: Path) -> Path:
     """Return the cached host probe binary for the current probe source."""
     digest = hashlib.sha256(PROBE_SOURCE.read_bytes()).hexdigest()[:16]
@@ -477,19 +490,8 @@ def _check_cpu_profile(context: DoctorContext) -> tuple[str, str, str, list[str]
         check=False,
     )
     output = f"{completed.stdout}\n{completed.stderr}"
-    line = next(
-        (
-            line.strip()
-            for line in output.splitlines()
-            if line.strip().startswith(CPU_PROFILE_PREFIX)
-        ),
-        None,
-    )
+    line, last = _output_line(output, CPU_PROFILE_PREFIX)
     if line is None:
-        last = next(
-            (line.strip() for line in reversed(output.splitlines()) if line.strip()),
-            "no output",
-        )
         if "--cpu-fingerprint" in output and "unexpected argument" in output:
             last = "this OpenVMM predates the --cpu-fingerprint tool"
         return (
@@ -589,19 +591,8 @@ def check_openvmm_preflight(context: DoctorContext) -> CheckResult:
         check=False,
     )
     output = f"{completed.stdout}\n{completed.stderr}"
-    verify = next(
-        (
-            line.strip()
-            for line in output.splitlines()
-            if line.strip().startswith(VERIFY_PREFIX)
-        ),
-        None,
-    )
+    verify, last = _output_line(output, VERIFY_PREFIX)
     if verify is None:
-        last = next(
-            (line.strip() for line in reversed(output.splitlines()) if line.strip()),
-            "no output",
-        )
         if "unexpected argument '--x-time-abi-verify'" in output:
             last = "this OpenVMM predates the time ABI's --x-time-abi-verify mode"
         return CheckResult(
