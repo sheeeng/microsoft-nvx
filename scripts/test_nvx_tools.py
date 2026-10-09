@@ -15889,6 +15889,15 @@ class GitOutputTests(unittest.TestCase):
         )
 
 
+class RunCheckedTests(unittest.TestCase):
+    def test_reports_command_start_failure_as_script_error(self):
+        with self.assertRaisesRegex(
+            common.ScriptError,
+            r"could not start command /missing/nvx-tool: .*No such file",
+        ):
+            common.run_checked(["/missing/nvx-tool"])
+
+
 class SharedFileTests(unittest.TestCase):
     def test_checksum_manifest_detects_modified_file(self):
         with tempfile.TemporaryDirectory() as temporary:

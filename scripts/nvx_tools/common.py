@@ -309,6 +309,10 @@ def run_checked(
         raise ScriptError(
             f"command failed with exit {error.returncode}: {' '.join(command)}"
         ) from error
+    except OSError as error:
+        raise ScriptError(
+            f"could not start command {' '.join(command)}: {error}"
+        ) from error
 
 
 class _CrossOriginRedirectHandler(urllib.request.HTTPRedirectHandler):
