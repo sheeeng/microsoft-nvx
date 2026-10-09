@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -15857,6 +15858,15 @@ class PositiveIntTests(unittest.TestCase):
     def test_accepts_custom_error_message(self):
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "^must be at least 1$"):
             common.positive_int("0", message="must be at least 1")
+
+
+class DoctorTests(unittest.TestCase):
+    def test_default_probe_directory_uses_shared_artifact_path(self):
+        with patch.dict(os.environ, {"RUNNER_TOOL_CACHE": ""}):
+            self.assertEqual(
+                doctor.default_probe_directory(),
+                common.artifact_path("host-time-probe"),
+            )
 
 
 class PositiveFloatTests(unittest.TestCase):
