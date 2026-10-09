@@ -15859,6 +15859,13 @@ class PositiveIntTests(unittest.TestCase):
             common.positive_int("0", message="must be at least 1")
 
 
+class RemainingTimeoutTests(unittest.TestCase):
+    def test_clamps_expired_deadlines(self):
+        with patch.object(common.time, "monotonic", return_value=10.0):
+            self.assertEqual(common.remaining_timeout(12.5), 2.5)
+            self.assertEqual(common.remaining_timeout(9.0), 0.0)
+
+
 class PositiveFloatTests(unittest.TestCase):
     def test_accepts_positive_finite_float(self):
         self.assertEqual(benchmark.positive_float("1.5"), 1.5)
