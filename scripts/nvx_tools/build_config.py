@@ -60,7 +60,7 @@ class DistroLayerBuildConfig:
 
 @dataclass(frozen=True, slots=True)
 class KernelBuildConfig:
-    work: Path = BuildConstants.BUILD_DIR / KernelBuildConstants.WORK_DIRECTORY_NAME
+    work: Path = artifact_path(KernelBuildConstants.WORK_DIRECTORY_NAME)
     output: Path = artifact_path(KernelBuildConstants.BINARY_NAME)
     cache_directory: Path = field(default_factory=_default_cache_directory)
     debug: bool = False
