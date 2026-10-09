@@ -737,6 +737,10 @@ def read_results(path: Path) -> list[Result]:
                 )
     except FileNotFoundError as error:
         raise PerformanceError(f"results file not found: {path}") from error
+    except OSError as error:
+        raise PerformanceError(f"cannot read results file {path}: {error}") from error
+    except UnicodeError as error:
+        raise PerformanceError(f"cannot decode results file {path}: {error}") from error
     return results
 
 

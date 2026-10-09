@@ -197,6 +197,21 @@ def lifecycle_document(
 
 
 class PerformanceTests(unittest.TestCase):
+    def test_read_results_reports_unreadable_files(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            with self.assertRaisesRegex(
+                performance.PerformanceError, "cannot read results file"
+            ):
+                performance.read_results(root)
+
+            invalid = root / "invalid.csv"
+            invalid.write_bytes(b"\xff")
+            with self.assertRaisesRegex(
+                performance.PerformanceError, "cannot decode results file"
+            ):
+                performance.read_results(invalid)
+
     def test_ci_one_vcpu_metric_count_matches_collectors(self):
         expected = len(
             performance.SHARED_METRICS | performance.LIFECYCLE_METRICS
