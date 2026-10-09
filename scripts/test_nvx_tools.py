@@ -6221,6 +6221,19 @@ class BuildTests(unittest.TestCase):
             ):
                 ubuntu.load_package_lock(path)
 
+            with self.assertRaisesRegex(
+                common.ScriptError, "failed to read Ubuntu package lock"
+            ):
+                ubuntu.package_lock_sha256(path.with_name("missing.json"))
+
+    def test_azurelinux_package_lock_hash_read_errors_are_actionable(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "missing.json"
+            with self.assertRaisesRegex(
+                common.ScriptError, "failed to read Azure Linux package lock"
+            ):
+                azurelinux.package_lock_sha256(path)
+
     def test_ubuntu_safe_extractor_rejects_archive_symlink_escape(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
