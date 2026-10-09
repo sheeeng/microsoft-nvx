@@ -81,7 +81,8 @@ def _read_json(
         raise ScriptError(f"{description} has an unsupported format: {path}")
     typed = cast(dict[str, Any], value)
     accepted = (version,) if isinstance(version, int) else version
-    if typed.get(version_field) not in accepted:
+    version_value = typed.get(version_field)
+    if isinstance(version_value, bool) or version_value not in accepted:
         raise ScriptError(f"{description} has an unsupported format: {path}")
     return typed
 
