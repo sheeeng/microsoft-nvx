@@ -9426,6 +9426,42 @@ class AciSandboxRunnerTests(unittest.TestCase):
         self.assertTrue((sandbox / "launch.json").is_file())
         self.assertIn(f"{sandbox} (OpenVMM pid 77)", stderr)
 
+    def test_handler_reports_state_with_invalid_utf8_without_traceback(self):
+        state_roots: list[Path] = []
+
+        def fake_environment(
+            backend: str, state_root: Path, output_dir: Path
+        ) -> dict[str, str]:
+            state_roots.append(state_root)
+            return {}
+
+        def fake_run(
+            command: list[str], *, env: dict[str, str], check: bool
+        ) -> subprocess.CompletedProcess[bytes]:
+            sandbox = state_roots[0] / "network" / ("a" * 32)
+            sandbox.mkdir(parents=True)
+            (sandbox / "sandbox.json").write_text("{}", encoding="utf-8")
+            (sandbox / "runtime.json").write_bytes(b"\xff")
+            return subprocess.CompletedProcess(command, 0)
+
+        with tempfile.TemporaryDirectory() as temporary:
+            args = argparse.Namespace(
+                backend="kvm", output_dir=Path(temporary) / "results", cargo="cargo"
+            )
+            with (
+                patch.object(aci_edge_sandboxes_tests, "validate_openvmm_test_backend"),
+                patch.object(
+                    aci_edge_sandboxes_tests, "e2e_environment", fake_environment
+                ),
+                patch.object(aci_edge_sandboxes_tests.subprocess, "run", fake_run),
+                patch("sys.stderr", io.StringIO()) as stderr,
+            ):
+                self.assertEqual(
+                    aci_edge_sandboxes_tests.command_test_aci_edge_sandboxes(args), 0
+                )
+
+        self.assertIn("no recorded OpenVMM process", stderr.getvalue())
+
 
 def _write_managed_runtime(state: Path, pid: int, start_time: int | None) -> None:
     runtime: dict[str, object] = {

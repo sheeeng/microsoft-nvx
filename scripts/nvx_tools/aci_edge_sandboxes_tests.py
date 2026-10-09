@@ -95,7 +95,7 @@ def recorded_pid(sandbox: Path) -> int | None:
     for name, keys in (("runtime.json", ("pid",)), ("launch.json", ("process", "pid"))):
         try:
             value: object = json.loads((sandbox / name).read_text(encoding="utf-8"))
-        except (OSError, ValueError):
+        except (OSError, UnicodeDecodeError, ValueError):
             continue
         for key in keys:
             if not isinstance(value, dict):
