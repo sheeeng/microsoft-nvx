@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -4821,6 +4822,25 @@ class BuildConstantsTests(unittest.TestCase):
                     check=False,
                 )
                 self.assertEqual(result.returncode, 0, result.stderr)
+
+
+class DoctorProbeTests(unittest.TestCase):
+    def test_probe_path_uses_shared_source_checksum(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "probe.rs"
+            source.write_bytes(b"probe source")
+            with (
+                patch.object(doctor, "PROBE_SOURCE", source),
+                patch.object(doctor, "sha256_file", wraps=common.sha256_file) as digest,
+            ):
+                result = doctor.probe_path(Path(temporary) / "cache")
+            digest.assert_called_once_with(source)
+            suffix = ".exe" if os.name == "nt" else ""
+            expected = hashlib.sha256(source.read_bytes()).hexdigest()[:16]
+            self.assertEqual(
+                result,
+                Path(temporary) / "cache" / f"nvx-host-time-probe-{expected}{suffix}",
+            )
 
 
 class UbuntuSourceCollectionTests(unittest.TestCase):
