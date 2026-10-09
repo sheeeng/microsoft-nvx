@@ -467,7 +467,7 @@ python3 scripts/nvx.py run
 | `--network-egress-allow CIDR[:PROTOCOL:PORT]` | none | Allow matching guest egress; repeat to add rules. |
 | `--network-egress-deny CIDR[:PROTOCOL:PORT]` | none | Deny matching guest egress; repeat to add rules. Deny rules take precedence. |
 | `--network-egress-policy-file PATH` | none | Load bounded IPv4 ranges and rule-local CIDR exclusions from JSON. Requires explicit `--network-egress`; cannot be mixed with explicit allow/deny rule flags. |
-| `--host-loopback {allow,deny}` | existing mapping | Control guest access to host loopback services. |
+| `--host-loopback {allow,deny}` | omitted | Control guest access to host loopback services; omission preserves the existing guest-to-host mapping. |
 | `--network-proxy IPV4:TCP-PORT` | none | Allow one explicit host TCP proxy endpoint. |
 | `--host-loopback-forward PROTOCOL:HOST_PORT:GUEST_PORT` | none | Publish one TCP or UDP localhost port to the guest; repeat to add forwards. |
 | `--outcome-report PATH` | none | Write a bounded local JSON outcome report. |
@@ -566,7 +566,7 @@ launches.
 | `--network-egress-allow CIDR[:PROTOCOL:PORT]` | none | Allow matching guest egress; repeat to add rules. Requires explicit `--network-egress`. |
 | `--network-egress-deny CIDR[:PROTOCOL:PORT]` | none | Deny matching guest egress; repeat to add rules. Requires explicit `--network-egress`; deny rules take precedence. |
 | `--network-egress-policy-file PATH` | none | Load bounded IPv4 ranges and rule-local CIDR exclusions for `run` or `provision`. Managed provision persists lowered rules, not this path. Requires explicit `--network-egress`; cannot be mixed with explicit allow/deny rule flags. |
-| `--host-loopback {allow,deny}` | existing mapping | Control guest access to host loopback services for `run` or `provision`. |
+| `--host-loopback {allow,deny}` | omitted | Control guest access to host loopback services for `run` or `provision`; omission preserves the existing guest-to-host mapping. |
 | `--network-proxy IPV4:TCP-PORT` | none | Allow one explicit host TCP proxy endpoint; the IPv4 address must match the guest gateway. |
 | `--host-loopback-forward PROTOCOL:HOST_PORT:GUEST_PORT` | none | Publish one TCP or UDP localhost port to the guest; repeat to add forwards and set `--host-loopback allow`. |
 | `--outcome-report PATH` | none | Write a bounded local JSON outcome report for one-shot `run` or managed `exec`. |
