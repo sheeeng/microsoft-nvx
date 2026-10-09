@@ -585,9 +585,13 @@ def _prepare_alpine_root(config: InitramfsBuildConfig) -> Path:
 def _install(source: Path, destination: Path) -> dict[str, str]:
     destination.write_bytes(source.read_bytes().replace(b"\r\n", b"\n"))
     destination.chmod(0o755)
+    return _helper_provenance(source, destination)
+
+
+def _helper_provenance(source: Path, binary: Path) -> dict[str, str]:
     return {
         "source_sha256": sha256_file(source),
-        "binary_sha256": sha256_file(destination),
+        "binary_sha256": sha256_file(binary),
     }
 
 
@@ -611,10 +615,7 @@ def _build_static_helper(
     )
     shutil.copyfile(output, destination)
     destination.chmod(0o755)
-    return {
-        "source_sha256": sha256_file(source),
-        "binary_sha256": sha256_file(output),
-    }
+    return _helper_provenance(source, output)
 
 
 def _build_device_io_helper(work: Path, destination: Path) -> dict[str, str]:
@@ -632,10 +633,7 @@ def _build_device_io_helper(work: Path, destination: Path) -> dict[str, str]:
     )
     shutil.copyfile(output, destination)
     destination.chmod(0o755)
-    return {
-        "source_sha256": sha256_file(source),
-        "binary_sha256": sha256_file(output),
-    }
+    return _helper_provenance(source, output)
 
 
 def _apk_add(root: Path, *packages: str) -> None:
