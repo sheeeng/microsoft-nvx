@@ -3729,7 +3729,7 @@ class MicrovmTests(unittest.TestCase):
         self.assertTrue(
             all(
                 call.kwargs["post_restore_script"]
-                == "probe\n" + time_abi.warp_probe_script() + time_abi.status_script()
+                == "probe\n" + microvm_tests.post_restore_checks()
                 for call in capture_snapshot.call_args_list
             )
         )
