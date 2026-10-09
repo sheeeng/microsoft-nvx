@@ -2462,6 +2462,16 @@ def _raise_guest_script_failure(
         raise error
 
 
+def _start_output_reader(
+    interaction: InteractiveProcess, timeout: float
+) -> tuple[queue.Queue[bytes | None], float]:
+    chunks: queue.Queue[bytes | None] = queue.Queue()
+    threading.Thread(
+        target=interaction.read_output, args=(chunks,), daemon=True
+    ).start()
+    return chunks, time.monotonic() + timeout
+
+
 def run_guest_script(
     command: Sequence[str],
     script: str,
@@ -2496,11 +2506,7 @@ def run_guest_script(
     if windows_cpus is not None:
         set_windows_affinity(process.pid, windows_cpus)
 
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
+    chunks, deadline = _start_output_reader(interaction, timeout)
     output = bytearray()
     status_sent = False
     input_sent = False
@@ -2618,11 +2624,7 @@ def capture_automatic_snapshot(
     if windows_cpus is not None:
         set_windows_affinity(process.pid, windows_cpus)
 
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
+    chunks, deadline = _start_output_reader(interaction, timeout)
     output = bytearray()
     try:
         while True:
@@ -2705,11 +2707,7 @@ def capture_device_restore_snapshot(
     monitor = TimeAbiMonitor(command)
     if windows_cpus is not None:
         set_windows_affinity(process.pid, windows_cpus)
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
+    chunks, deadline = _start_output_reader(interaction, timeout)
     output = bytearray()
     try:
         while True:
@@ -2773,11 +2771,7 @@ def run_device_restore_sample(
     monitor = TimeAbiMonitor(command)
     if windows_cpus is not None:
         set_windows_affinity(process.pid, windows_cpus)
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
-    deadline = time.monotonic() + timeout
+    chunks, deadline = _start_output_reader(interaction, timeout)
     output = bytearray()
     pending = bytearray()
     markers: list[dict[str, str]] = []
