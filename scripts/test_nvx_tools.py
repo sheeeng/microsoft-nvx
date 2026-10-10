@@ -6221,6 +6221,21 @@ class BuildTests(unittest.TestCase):
             ):
                 ubuntu.load_package_lock(path)
 
+    def test_ubuntu_zstd_launch_errors_are_actionable(self):
+        with (
+            patch.object(ubuntu, "require_tool", return_value="zstd"),
+            patch.object(
+                ubuntu.subprocess,
+                "run",
+                side_effect=OSError("permission denied"),
+            ),
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                "failed to run zstd while decompressing data.tar.zst",
+            ):
+                ubuntu._decompress_tar_member("data.tar.zst", b"archive")
+
     def test_ubuntu_safe_extractor_rejects_archive_symlink_escape(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

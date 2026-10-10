@@ -408,11 +408,16 @@ def _decompress_tar_member(name: str, data: bytes) -> bytes:
             "zstd",
             "zstd was not found on PATH; install it to extract Ubuntu packages",
         )
-        result = subprocess.run(
-            [zstd, "--decompress", "--stdout", "--quiet"],
-            input=data,
-            capture_output=True,
-        )
+        try:
+            result = subprocess.run(
+                [zstd, "--decompress", "--stdout", "--quiet"],
+                input=data,
+                capture_output=True,
+            )
+        except OSError as error:
+            raise ScriptError(
+                f"failed to run zstd while decompressing {name}"
+            ) from error
         if result.returncode != 0:
             diagnostic = result.stderr.decode("utf-8", errors="replace").strip()
             raise ScriptError(
