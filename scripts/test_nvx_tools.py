@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    create_linux_source_archive,
     guests,
     release,
     sandbox,
@@ -5346,6 +5347,25 @@ class AlpineSourceCollectionTests(unittest.TestCase):
 
 
 class BuildTests(unittest.TestCase):
+    def test_linux_source_archive_requires_generated_config(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            missing = root / "generated.config"
+            args = argparse.Namespace(config=missing, output=root / "archive.tar.gz")
+
+            with (
+                patch.object(
+                    create_linux_source_archive,
+                    "prepare_kernel_source",
+                    return_value=(root / "source", "fingerprint"),
+                ),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    f"generated kernel config not found: {missing}",
+                ),
+            ):
+                create_linux_source_archive.command_create_linux_source_archive(args)
+
     def test_build_config_owns_standard_runtime_paths(self):
         config = build_config.BuildConfig()
         alpine = config.initramfs_config("alpine")
