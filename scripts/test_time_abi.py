@@ -1505,6 +1505,15 @@ class DoctorTests(unittest.TestCase):
         fields = time_abi.parse_fields(line.removeprefix(doctor.DOCTOR_PREFIX))
         self.assertEqual(fields["detail"], 'say "x" \\ y')
 
+    def test_host_clocksource_reports_unreadable_source(self):
+        missing = self.root / "current_clocksource"
+        with patch.object(doctor, "CLOCKSOURCE_PATH", missing):
+            with self.assertRaisesRegex(
+                doctor.ScriptError,
+                rf"cannot read host clocksource {re.escape(str(missing))}",
+            ):
+                doctor.host_clocksource()
+
     def test_backend_check_requires_a_usable_device(self):
         context = doctor_context(self.root)
         existing: set[str] = set()
