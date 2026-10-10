@@ -170,22 +170,26 @@ def build_probe(directory: Path) -> Path:
         raise ScriptError("rustc is required to build the host time probe")
     directory.mkdir(parents=True, exist_ok=True)
     temporary = target.with_name(f".{target.stem}-{os.getpid()}{target.suffix}")
-    completed = subprocess.run(
-        [
-            rustc,
-            "--edition=2021",
-            "-C",
-            "opt-level=2",
-            "-C",
-            "debuginfo=0",
-            "-o",
-            os.fspath(temporary),
-            os.fspath(PROBE_SOURCE),
-        ],
-        capture_output=True,
-        text=True,
-        check=False,
-    )
+    try:
+        completed = subprocess.run(
+            [
+                rustc,
+                "--edition=2021",
+                "-C",
+                "opt-level=2",
+                "-C",
+                "debuginfo=0",
+                "-o",
+                os.fspath(temporary),
+                os.fspath(PROBE_SOURCE),
+            ],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError as error:
+        temporary.unlink(missing_ok=True)
+        raise ScriptError(f"failed to run rustc: {error}") from error
     if completed.returncode != 0:
         temporary.unlink(missing_ok=True)
         raise ScriptError(

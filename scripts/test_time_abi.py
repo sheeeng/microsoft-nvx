@@ -2456,6 +2456,21 @@ class DoctorTests(unittest.TestCase):
             with self.assertRaisesRegex(doctor.ScriptError, "E0425"):
                 doctor.build_probe(self.root)
 
+    def test_build_probe_reports_rustc_launch_failure_and_cleans_up(self):
+        with (
+            patch.object(doctor.shutil, "which", return_value="rustc"),
+            patch.object(
+                doctor.subprocess,
+                "run",
+                side_effect=OSError("rustc unavailable"),
+            ),
+        ):
+            with self.assertRaisesRegex(
+                doctor.ScriptError, r"failed to run rustc: rustc unavailable"
+            ):
+                doctor.build_probe(self.root)
+        self.assertEqual(list(self.root.iterdir()), [])
+
     def test_parses_probe_records(self):
         context = doctor_context(self.root)
         context.probe = self.root / "probe.exe"
