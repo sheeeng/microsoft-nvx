@@ -11150,6 +11150,32 @@ class SandboxTests(unittest.TestCase):
             sandbox_lifecycle.deprovision(state)
             self.assertFalse(state.exists())
 
+    def test_managed_lifecycle_reports_unreadable_capability(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)
+            _write_managed_runtime(state, os.getpid(), None)
+            capability_path = state / sandbox_lifecycle.CAPABILITY_NAME
+            original_read_bytes = Path.read_bytes
+
+            def read_bytes(path: Path) -> bytes:
+                if path == capability_path:
+                    raise PermissionError("capability unavailable")
+                return original_read_bytes(path)
+
+            with (
+                patch.object(sandbox_lifecycle, "_process_running", return_value=True),
+                patch.object(Path, "read_bytes", read_bytes),
+                self.assertRaisesRegex(
+                    common.ScriptError, "failed to read sandbox control capability"
+                ),
+            ):
+                sandbox_lifecycle.exec_workload(
+                    state,
+                    ("/bin/true",),
+                    timeout_ms=0,
+                    response_timeout=1,
+                )
+
     def test_managed_lifecycle_identifies_legacy_records_by_process_id(self):
         if os.name != "nt" and sys.platform != "linux":
             self.skipTest("process identity requires a Linux or Windows host")
