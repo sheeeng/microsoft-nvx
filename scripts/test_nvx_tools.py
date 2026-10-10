@@ -6429,6 +6429,26 @@ class BuildTests(unittest.TestCase):
             ),
         )
 
+    def test_ubuntu_download_json_reports_unreadable_response(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "response.json"
+            with (
+                patch.object(collect_ubuntu_sources, "download"),
+                patch.object(
+                    Path,
+                    "read_text",
+                    side_effect=OSError("permission denied"),
+                ),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "invalid Launchpad response",
+                ),
+            ):
+                collect_ubuntu_sources._download_json(
+                    "https://launchpad.invalid/response",
+                    path,
+                )
+
     def test_ubuntu_dsc_validation_matches_source_index(self):
         payload = b"source"
         digest = hashlib.sha256(payload).hexdigest()
