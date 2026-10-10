@@ -9,10 +9,24 @@ from pathlib import Path
 from unittest.mock import call, patch
 
 sys.path.insert(0, str(Path(__file__).parent))
-from nvx_tools import development_release  # noqa: E402
+from nvx_tools import common, development_release  # noqa: E402
 
 
 class DevelopmentReleaseTests(unittest.TestCase):
+    def test_parse_release_rejects_negative_asset_size(self):
+        payload = (
+            '{"tagName":"v1","targetCommitish":"'
+            + "a" * 40
+            + '","isDraft":true,"isPrerelease":true,"assets":['
+            '{"name":"package.tar.gz","size":-1,"digest":null,"state":"uploaded"}]}'
+        )
+
+        with self.assertRaisesRegex(
+            common.ScriptError,
+            "incomplete release asset metadata",
+        ):
+            development_release._parse_release(payload)
+
     def _package(
         self,
         root: Path,
