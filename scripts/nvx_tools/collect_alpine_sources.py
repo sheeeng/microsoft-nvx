@@ -266,18 +266,23 @@ def _extract_recipe(
     )
     for repository in repositories:
         recipe = f"{repository}/{metadata['origin']}"
-        probe = subprocess.run(
-            [
-                "git",
-                "-C",
-                cache,
-                "cat-file",
-                "-e",
-                f"{metadata['commit']}:{recipe}/APKBUILD",
-            ],
-            stdout=subprocess.DEVNULL,
-            stderr=subprocess.DEVNULL,
-        )
+        try:
+            probe = subprocess.run(
+                [
+                    "git",
+                    "-C",
+                    cache,
+                    "cat-file",
+                    "-e",
+                    f"{metadata['commit']}:{recipe}/APKBUILD",
+                ],
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+            )
+        except OSError as error:
+            raise SourceError(
+                f"cannot query aports repository with git: {error}"
+            ) from error
         if probe.returncode == 0:
             metadata["repository"] = repository
             break

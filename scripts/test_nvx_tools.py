@@ -4942,6 +4942,27 @@ class AlpineSourceCollectionTests(unittest.TestCase):
 
                 self.assertIn("package manifest", str(context.exception))
 
+    def test_unlaunchable_git_probe_is_reported_as_source_error(self):
+        metadata = {
+            "origin": "foo",
+            "repository": "main",
+            "commit": "0" * 40,
+        }
+        with (
+            patch.object(
+                collect_alpine_sources.subprocess,
+                "run",
+                side_effect=OSError("git unavailable"),
+            ),
+            self.assertRaisesRegex(
+                collect_alpine_sources.SourceError,
+                "cannot query aports repository with git",
+            ),
+        ):
+            collect_alpine_sources._extract_recipe(
+                Path("cache"), Path("output"), metadata, set()
+            )
+
     def test_recipe_symlink_is_collected_as_verified_regular_file(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
