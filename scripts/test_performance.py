@@ -1734,6 +1734,16 @@ class PerformanceTests(unittest.TestCase):
             ):
                 performance.read_workload_dimensions(logs, "linux-kvm-virtual-machine")
 
+    def test_rejects_unreadable_lifecycle_result(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "acceptance.json"
+            source.mkdir()
+
+            with self.assertRaisesRegex(
+                performance.PerformanceError, "cannot read benchmark result"
+            ):
+                performance.read_lifecycle_data("linux-kvm-baremetal", source)
+
     def test_rejects_microvm_v3_dimensions(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
