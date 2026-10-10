@@ -4835,6 +4835,46 @@ class UbuntuSourceCollectionTests(unittest.TestCase):
         self.assertIn("cannot read Ubuntu package manifest", str(context.exception))
 
 
+class UbuntuReleaseSourceValidationTests(unittest.TestCase):
+    def test_malformed_collected_manifest_is_reported_as_script_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root = root / "ubuntu"
+            source_root.mkdir()
+            (source_root / "manifest.json").write_text("{}", encoding="utf-8")
+            package_manifest = root / "packages.json"
+            package_manifest.write_text('{"packages": []}', encoding="utf-8")
+
+            with (
+                patch.object(release.BuildConstants, "SOURCE_DIR", root),
+                self.assertRaisesRegex(
+                    release.ScriptError,
+                    "invalid packages list",
+                ),
+            ):
+                release._validate_ubuntu_sources([package_manifest])
+
+    def test_malformed_package_manifest_is_reported_as_script_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source_root = root / "ubuntu"
+            source_root.mkdir()
+            (source_root / "manifest.json").write_text(
+                '{"packages": []}', encoding="utf-8"
+            )
+            package_manifest = root / "packages.json"
+            package_manifest.write_text("{}", encoding="utf-8")
+
+            with (
+                patch.object(release.BuildConstants, "SOURCE_DIR", root),
+                self.assertRaisesRegex(
+                    release.ScriptError,
+                    "invalid packages list",
+                ),
+            ):
+                release._validate_ubuntu_sources([package_manifest])
+
+
 class AlpineSourceCollectionTests(unittest.TestCase):
     INSTALL_SCRIPT = b"#!/bin/sh\nexit 0\n"
 
