@@ -4838,6 +4838,18 @@ class UbuntuSourceCollectionTests(unittest.TestCase):
 class AlpineSourceCollectionTests(unittest.TestCase):
     INSTALL_SCRIPT = b"#!/bin/sh\nexit 0\n"
 
+    def test_run_reports_command_start_failures(self):
+        with patch.object(
+            collect_alpine_sources.subprocess,
+            "run",
+            side_effect=OSError("tool not found"),
+        ):
+            with self.assertRaisesRegex(
+                collect_alpine_sources.SourceError,
+                r"cannot start command git clone: tool not found",
+            ):
+                collect_alpine_sources._run(["git", "clone"])
+
     @staticmethod
     def _aports_commit(cache: Path, files: dict[str, tuple[str, bytes]]) -> str:
         environment = {
