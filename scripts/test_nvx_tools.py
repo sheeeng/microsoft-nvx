@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -435,6 +436,26 @@ def _write_release_fixture(
         "binary": binary,
     }
     return paths, kernel_inputs, revision
+
+
+class DoctorTests(unittest.TestCase):
+    def test_build_probe_reports_missing_rustc(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with patch.object(
+                doctor,
+                "require_tool",
+                side_effect=common.ScriptError(
+                    "rustc is required to build the host time probe"
+                ),
+            ) as require_tool:
+                with self.assertRaisesRegex(
+                    common.ScriptError,
+                    "rustc is required to build the host time probe",
+                ):
+                    doctor.build_probe(Path(temporary))
+            require_tool.assert_called_once_with(
+                "rustc", "rustc is required to build the host time probe"
+            )
 
 
 class CliTests(unittest.TestCase):
