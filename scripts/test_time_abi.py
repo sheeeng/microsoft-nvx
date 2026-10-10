@@ -2477,6 +2477,15 @@ class DoctorTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(doctor.ScriptError, "skew failed: no CPU"):
                 doctor.run_probe(context, "skew")
+        with patch.object(
+            doctor.subprocess,
+            "run",
+            side_effect=OSError("permission denied"),
+        ):
+            with self.assertRaisesRegex(
+                doctor.ScriptError, "failed to run host time probe: permission denied"
+            ):
+                doctor.run_probe(context, "skew")
 
 
 def doctor_parser():
