@@ -489,9 +489,12 @@ def setup_cross_os_cache() -> None:
     zstd = destination / ZstdBuildConstants.DIRECTORY_NAME / "zstd.exe"
     require_file(zstd, "zstd.exe")
 
-    with github_path.open("a", encoding="utf-8", newline="") as output:
-        output.write(f"{gnu_tar.parent}{os.linesep}")
-        output.write(f"{zstd.parent}{os.linesep}")
+    try:
+        with github_path.open("a", encoding="utf-8", newline="") as output:
+            output.write(f"{gnu_tar.parent}{os.linesep}")
+            output.write(f"{zstd.parent}{os.linesep}")
+    except OSError as error:
+        raise ScriptError(f"cannot update GitHub Actions path file: {error}") from error
 
     run_checked([gnu_tar, "--version"])
     run_checked([zstd, "--version"])

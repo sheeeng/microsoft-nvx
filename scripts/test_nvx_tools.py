@@ -2059,6 +2059,45 @@ class CliTests(unittest.TestCase):
 
 
 class CiTests(unittest.TestCase):
+    def test_cross_os_cache_reports_unwritable_github_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            path_type = type(root)
+            archive = root / ci.ZstdBuildConstants.ARCHIVE_NAME
+            with zipfile.ZipFile(archive, "w") as package:
+                package.writestr(
+                    f"{ci.ZstdBuildConstants.DIRECTORY_NAME}/zstd.exe",
+                    b"zstd",
+                )
+            runner_temp = root / "runner-temp"
+            runner_temp.mkdir()
+
+            def download_archive(
+                _url: str, destination: Path, *, expected_sha256: str
+            ) -> None:
+                shutil.copyfile(archive, destination)
+
+            with (
+                patch.object(ci.os, "name", "nt"),
+                patch.object(ci, "Path", path_type),
+                patch.dict(
+                    os.environ,
+                    {
+                        "GITHUB_PATH": os.fspath(root),
+                        "RUNNER_TEMP": os.fspath(runner_temp),
+                    },
+                ),
+                patch.object(ci, "download", side_effect=download_archive),
+                patch.object(ci, "require_tool", return_value="git.exe"),
+                patch.object(ci, "require_file"),
+                patch.object(ci, "run_checked"),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "cannot update GitHub Actions path file",
+                ),
+            ):
+                ci.setup_cross_os_cache()
+
     def test_openvmm_unit_tests_run_nextest_and_doctests(self):
         with tempfile.TemporaryDirectory() as temporary:
             openvmm = Path(temporary) / "openvmm"
