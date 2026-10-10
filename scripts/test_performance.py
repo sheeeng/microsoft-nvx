@@ -888,6 +888,19 @@ class PerformanceTests(unittest.TestCase):
             self.assertTrue(all(result.unit == "ops/s" for result in results))
             self.assertTrue(all(result.direction == "higher" for result in results))
 
+    def test_unreadable_benchmark_log_is_reported_as_performance_error(self):
+        path = Path("benchmark.log")
+        with patch.object(
+            Path,
+            "read_bytes",
+            side_effect=PermissionError("access denied"),
+        ):
+            with self.assertRaisesRegex(
+                performance.PerformanceError,
+                r"cannot read benchmark log benchmark\.log: access denied",
+            ):
+                performance._read_log(path)
+
     def test_collects_linux_metrics_from_utf8_and_utf16_logs(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
