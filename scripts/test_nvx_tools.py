@@ -15889,6 +15889,20 @@ class GitOutputTests(unittest.TestCase):
         )
 
 
+class RunCaptureTests(unittest.TestCase):
+    def test_reports_command_start_failure_as_script_error(self):
+        with patch.object(
+            common.subprocess,
+            "run",
+            side_effect=FileNotFoundError(2, "No such file or directory"),
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                r"cannot start command: missing-tool --version: .*No such file",
+            ):
+                common.run_capture(["missing-tool", "--version"])
+
+
 class SharedFileTests(unittest.TestCase):
     def test_checksum_manifest_detects_modified_file(self):
         with tempfile.TemporaryDirectory() as temporary:
