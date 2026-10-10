@@ -41,7 +41,7 @@ from .build_constants import (
     KernelBuildConstants,
     OpenVMMBuildConstants,
 )
-from .common import bytes_to_mib, sha256_file
+from .common import bytes_to_mib, openvmm_binary_path, sha256_file
 from .time_abi import TimeAbiFailure, TimeAbiMonitor, status_script
 
 BOOT_MARKER = b"ALPINE-MICROVM-BOOT-OK"
@@ -5459,7 +5459,7 @@ def build_whp(openvmm_dir: Path) -> Path:
         cwd=openvmm_dir,
     )
     return require_file(
-        openvmm_dir / "target" / "release" / OpenVMMBuildConstants.WINDOWS_BINARY_NAME,
+        openvmm_binary_path(directory=openvmm_dir),
         "native OpenVMM release binary",
     )
 

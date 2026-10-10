@@ -4761,6 +4761,12 @@ class BuildConstantsTests(unittest.TestCase):
                 self.assertEqual(common.openvmm_binary_path(), expected)
                 self.assertEqual(build_config.OpenVmmBuildConfig().output, expected)
 
+    def test_openvmm_executable_supports_an_explicit_directory(self):
+        directory = Path("custom-openvmm")
+        expected = directory / "target" / "release" / "openvmm"
+        with patch.object(common.os, "name", "posix"):
+            self.assertEqual(common.openvmm_binary_path(directory=directory), expected)
+
     def test_initramfs_provenance_tracks_constants_source(self):
         relative = "scripts/nvx_tools/build_constants.py"
         source = BuildConstants.REPO_ROOT / relative

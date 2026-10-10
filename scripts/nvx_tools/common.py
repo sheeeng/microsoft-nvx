@@ -67,14 +67,15 @@ def cache_root() -> Path:
     )
 
 
-def openvmm_binary_path() -> Path:
+def openvmm_binary_path(*, directory: Path | None = None) -> Path:
+    root = OpenVMMBuildConstants.DIRECTORY if directory is None else directory
     executable = (
         OpenVMMBuildConstants.WINDOWS_BINARY_NAME
         if os.name == "nt"
         else OpenVMMBuildConstants.BINARY_NAME
     )
     return (
-        OpenVMMBuildConstants.DIRECTORY
+        root
         / OpenVMMBuildConstants.TARGET_DIRECTORY_NAME
         / OpenVMMBuildConstants.BUILD_PROFILE
         / executable
