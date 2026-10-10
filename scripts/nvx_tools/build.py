@@ -1281,8 +1281,11 @@ def build_docker_linux_source(config: DockerBuildConfig) -> Path:
         cwd=BuildConstants.REPO_ROOT,
     )
     archive = destination / KernelBuildConstants.SOURCE_ARCHIVE_NAME
-    if not archive.is_file():
-        raise ScriptError(f"Docker build did not produce {archive.name}")
+    require_file(
+        archive,
+        "Docker build output",
+        error_message=f"Docker build did not produce {archive.name}",
+    )
     print(f">> built {archive} ({format_size(archive.stat().st_size)})")
     return archive
 

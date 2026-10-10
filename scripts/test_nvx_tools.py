@@ -802,6 +802,19 @@ class CliTests(unittest.TestCase):
             ):
                 build.build_docker_artifacts(config, "azurelinux")
 
+    def test_docker_linux_source_preserves_missing_archive_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            config = build.DockerBuildConfig(linux_source_destination=Path(temporary))
+            with (
+                patch.object(build, "require_tool"),
+                patch.object(build, "run_checked"),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "Docker build did not produce nvx-linux-source-6.18.38.tar.gz",
+                ),
+            ):
+                build.build_docker_linux_source(config)
+
     def test_ubuntu_run_selects_artifact_and_default_memory(self):
         args = nvx.parse_args(["run", "--guest", "ubuntu", "--dry-run"])
 

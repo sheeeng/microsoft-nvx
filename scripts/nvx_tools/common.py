@@ -183,9 +183,11 @@ def openvmm_git_state(directory: Path) -> tuple[str, bool]:
     return revision, not status.stdout.strip()
 
 
-def require_file(path: Path, description: str) -> Path:
+def require_file(
+    path: Path, description: str, *, error_message: str | None = None
+) -> Path:
     if not path.is_file():
-        raise ScriptError(f"{description} not found: {path}")
+        raise ScriptError(error_message or f"{description} not found: {path}")
     return path
 
 
