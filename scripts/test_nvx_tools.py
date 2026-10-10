@@ -15888,6 +15888,18 @@ class GitOutputTests(unittest.TestCase):
             timeout=30.0,
         )
 
+    def test_git_revision_converts_command_errors_to_script_errors(self):
+        with patch.object(
+            release.subprocess,
+            "run",
+            side_effect=OSError("git unavailable"),
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                "failed to read OpenVMM revision: git unavailable",
+            ):
+                release._git_revision(Path("openvmm"), "HEAD", "OpenVMM revision")
+
 
 class SharedFileTests(unittest.TestCase):
     def test_checksum_manifest_detects_modified_file(self):
