@@ -208,13 +208,18 @@ def run_probe(
     """Run the host probe and parse its ``NVX-HOST-TIME-PROBE`` records."""
     if context.probe is None:
         context.probe = build_probe(context.probe_directory)
-    completed = subprocess.run(
-        [os.fspath(context.probe), *arguments],
-        capture_output=True,
-        text=True,
-        timeout=context.timeout,
-        check=False,
-    )
+    try:
+        completed = subprocess.run(
+            [os.fspath(context.probe), *arguments],
+            capture_output=True,
+            text=True,
+            timeout=context.timeout,
+            check=False,
+        )
+    except subprocess.TimeoutExpired as error:
+        raise ScriptError(
+            f"host time probe {arguments[0]} timed out after {context.timeout:g}s"
+        ) from error
     if completed.returncode != 0:
         message = completed.stderr.strip() or f"exit status {completed.returncode}"
         raise ScriptError(f"host time probe {arguments[0]} failed: {message}")

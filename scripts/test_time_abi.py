@@ -2477,6 +2477,15 @@ class DoctorTests(unittest.TestCase):
         ):
             with self.assertRaisesRegex(doctor.ScriptError, "skew failed: no CPU"):
                 doctor.run_probe(context, "skew")
+        with patch.object(
+            doctor.subprocess,
+            "run",
+            side_effect=subprocess.TimeoutExpired(["probe", "skew"], 30),
+        ):
+            with self.assertRaisesRegex(
+                doctor.ScriptError, r"skew timed out after 30s"
+            ):
+                doctor.run_probe(context, "skew")
 
 
 def doctor_parser():
