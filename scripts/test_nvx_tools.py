@@ -14460,6 +14460,24 @@ AUTHORIZATION_VALUE = "Bearer placeholder-value"
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_linux_source_archive_rejects_malformed_manifest(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            (root / "SOURCE-MANIFEST.json").write_text(
+                '{"format": 1}', encoding="utf-8"
+            )
+            config = root / "vmlinux.config"
+            config.write_text("CONFIG_TEST=y\n", encoding="utf-8")
+            with (
+                patch.object(release.BuildConstants, "REPO_ROOT", root),
+                patch.object(release, "artifact_path", return_value=config),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "linux\\.patches is not a list",
+                ),
+            ):
+                release._validate_linux_source_archive(root / "archive.tar.gz")
+
     def test_alpine_source_validation_rejects_malformed_manifest(self):
         with tempfile.TemporaryDirectory() as temporary:
             source_dir = Path(temporary)
