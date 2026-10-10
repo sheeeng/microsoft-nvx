@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    create_linux_source_archive,
     guests,
     release,
     sandbox,
@@ -14436,6 +14437,28 @@ class BenchmarkTests(unittest.TestCase):
             Path("dist/package"),
             Path("dist/package.zip"),
         )
+
+    def test_linux_source_archive_rejects_missing_generated_config(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "linux"
+            source.mkdir()
+            args = argparse.Namespace(
+                config=root / "missing.config",
+                output=root / "source.tar.gz",
+            )
+            with (
+                patch.object(
+                    create_linux_source_archive,
+                    "prepare_kernel_source",
+                    return_value=(source, None),
+                ),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "generated kernel config not found",
+                ),
+            ):
+                create_linux_source_archive.command_create_linux_source_archive(args)
 
     def test_download_command_selects_host_release(self):
         args = nvx.parse_args(["download", "--repository", "example/nvx"])

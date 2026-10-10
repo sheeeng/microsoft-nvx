@@ -12,6 +12,7 @@ from nvx_tools.build_constants import (
     BuildConstants,
     KernelBuildConstants,
 )
+from nvx_tools.common import ScriptError
 
 
 def configure_parser(parser: argparse.ArgumentParser) -> None:
@@ -24,9 +25,7 @@ def command_create_linux_source_archive(args: argparse.Namespace) -> None:
     source, _ = prepare_kernel_source(KernelBuildConfig())
     generated_config = args.config.resolve()
     if not generated_config.is_file():
-        raise FileNotFoundError(
-            f"generated kernel config not found: {generated_config}"
-        )
+        raise ScriptError(f"generated kernel config not found: {generated_config}")
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     root = KernelBuildConstants.SOURCE_ARCHIVE_ROOT
