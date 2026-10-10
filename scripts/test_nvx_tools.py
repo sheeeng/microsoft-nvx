@@ -14460,6 +14460,31 @@ AUTHORIZATION_VALUE = "Bearer placeholder-value"
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_alpine_source_validation_reports_missing_package_manifest(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source_dir = Path(temporary)
+            alpine_dir = source_dir / "alpine"
+            alpine_dir.mkdir()
+            (alpine_dir / "manifest.json").write_text(
+                json.dumps(
+                    {
+                        "format": AlpineBuildConstants.SOURCE_MANIFEST_FORMAT,
+                        "executables": [],
+                        "packages": [],
+                    }
+                ),
+                encoding="utf-8",
+            )
+            common.write_sha256_sums(alpine_dir)
+
+            with (
+                patch.object(BuildConstants, "SOURCE_DIR", source_dir),
+                self.assertRaisesRegex(
+                    common.ScriptError, "invalid Alpine package manifest"
+                ),
+            ):
+                release._validate_alpine_sources([source_dir / "missing-packages.json"])
+
     def test_alpine_source_validation_rejects_malformed_manifest(self):
         with tempfile.TemporaryDirectory() as temporary:
             source_dir = Path(temporary)
