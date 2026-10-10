@@ -16243,6 +16243,24 @@ class SharedFileTests(unittest.TestCase):
             self.assertTrue(all(member.mtime == 0 for member in members))
             self.assertTrue(all(member.uid == member.gid == 0 for member in members))
 
+    def test_source_archive_reports_unwritable_output(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            (source / "payload.txt").write_text("payload", encoding="ascii")
+            blocked_parent = root / "blocked"
+            blocked_parent.write_bytes(b"not a directory")
+
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                r"cannot write source archive .*blocked/archive\.tar\.gz",
+            ):
+                archive.create_reproducible_tar_gz(
+                    blocked_parent / "archive.tar.gz",
+                    [(source, "bundle")],
+                )
+
 
 class DownloadTests(unittest.TestCase):
     def test_rejects_nonpositive_attempts(self):
