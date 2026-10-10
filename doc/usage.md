@@ -253,9 +253,10 @@ python3 scripts/nvx.py test-microvm
 
 Runs NVX-owned Linux, SMP, virtio, sandbox, and snapshot correctness scenarios
 against the public OpenVMM CLI. Repeat `--scenario` to select a subset; without
-it, every scenario supported by the selected guest runs, except `smp-lapic`,
-which runs only when named: it repeats `smp` and also asserts that every CPU
-uses the one-shot counting LAPIC. Alpine remains the
+it, every scenario supported by the selected guest runs, except
+`managed-exec-config` and `smp-lapic`, which run only when named.
+`smp-lapic` repeats `smp` and also asserts that every CPU uses the one-shot
+counting LAPIC. Alpine remains the
 default. Ubuntu and Azure Linux cannot act as sandbox control, so they reject
 the Alpine-control-only `sandbox-blocks` and `scratch-snapshot` scenarios and
 the sandbox-control-dependent `snapshot-tiers` scenario. Ubuntu also rejects
