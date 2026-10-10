@@ -81,6 +81,14 @@ def openvmm_binary_path() -> Path:
     )
 
 
+def append_network_arguments(
+    command: list[str],
+    network: str,
+    profile: str = "portable",
+) -> None:
+    command.extend(("--net", network, "--network-profile", profile))
+
+
 @dataclass(frozen=True)
 class CommandResult:
     args: tuple[str, ...]

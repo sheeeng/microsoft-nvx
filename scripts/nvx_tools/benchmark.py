@@ -41,7 +41,7 @@ from .build_constants import (
     KernelBuildConstants,
     OpenVMMBuildConstants,
 )
-from .common import bytes_to_mib, sha256_file
+from .common import append_network_arguments, bytes_to_mib, sha256_file
 from .time_abi import TimeAbiFailure, TimeAbiMonitor, status_script
 
 BOOT_MARKER = b"ALPINE-MICROVM-BOOT-OK"
@@ -574,14 +574,6 @@ class _BenchmarkScriptTemplate(Template):
 
 def _render_benchmark_script(name: str, **values: str) -> str:
     return _BenchmarkScriptTemplate(_read_benchmark_script(name)).substitute(values)
-
-
-def append_network_arguments(
-    command: list[str],
-    network: str,
-    profile: str = "portable",
-) -> None:
-    command.extend(("--net", network, "--network-profile", profile))
 
 
 def require_file(path: Path, description: str) -> Path:

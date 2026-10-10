@@ -17,6 +17,7 @@ from .build_constants import (
 )
 from .common import (
     ScriptError,
+    append_network_arguments,
     artifact_path,
     openvmm_binary_path,
     require_file,
@@ -536,7 +537,7 @@ def start(state_path: Path, timeout: float) -> None:
     net = config.get("net")
     network_profile = config.get("network_profile")
     if net is not None:
-        command.extend(["--net", str(net), "--network-profile", str(network_profile)])
+        append_network_arguments(command, str(net), str(network_profile))
     for name in ("network_egress", "network_ingress", "host_loopback"):
         value = config.get(name)
         if value is not None:
