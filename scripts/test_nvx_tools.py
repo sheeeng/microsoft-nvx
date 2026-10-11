@@ -14460,6 +14460,31 @@ AUTHORIZATION_VALUE = "Bearer placeholder-value"
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_verify_source_tree_reports_unreadable_kernel_configuration(self):
+        with (
+            patch.object(
+                release,
+                "_read_json_object",
+                return_value={"format": 1},
+            ),
+            patch.object(
+                release,
+                "_validate_source_manifest_metadata",
+                return_value=(),
+            ),
+            patch.object(release, "require_file"),
+            patch.object(
+                Path,
+                "read_text",
+                side_effect=OSError("permission denied"),
+            ),
+            self.assertRaisesRegex(
+                common.ScriptError,
+                "failed to read kernel build configuration",
+            ),
+        ):
+            release.verify_source_tree()
+
     def test_alpine_source_validation_rejects_malformed_manifest(self):
         with tempfile.TemporaryDirectory() as temporary:
             source_dir = Path(temporary)
