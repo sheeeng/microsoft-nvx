@@ -120,7 +120,7 @@ class _SocketStream:
                 return cls(connection)
             except OSError as error:
                 connection.close()
-                if time.monotonic() >= deadline:
+                if remaining_timeout(deadline) <= 0:
                     raise TimeoutError(
                         f"managed control endpoint did not become available: {path}"
                     ) from error
