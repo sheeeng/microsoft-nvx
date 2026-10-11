@@ -6100,6 +6100,14 @@ class BuildTests(unittest.TestCase):
         )
         self.assertIn("azurelinux/packages.lock.json text eol=lf", attributes)
 
+    def test_azurelinux_package_lock_sha256_reports_unreadable_path(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "missing-packages.lock.json"
+            with self.assertRaisesRegex(
+                common.ScriptError, "failed to read Azure Linux package lock"
+            ):
+                azurelinux.package_lock_sha256(path)
+
     def test_azurelinux_package_lock_rejects_unpinned_records(self):
         document = json.loads(
             azurelinux.package_lock_path().read_text(encoding="utf-8")
