@@ -563,6 +563,11 @@ def run_checked(command: Sequence[str], *, cwd: Path | None = None) -> None:
     subprocess.run(command, cwd=cwd, check=True)
 
 
+def _write_json(path: Path, value: object) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+
+
 def _read_benchmark_script(name: str) -> str:
     script = (BENCHMARK_SCRIPTS_DIR / name).read_text(encoding="utf-8")
     return script if script.endswith("\n") else script + "\n"
@@ -3029,7 +3034,7 @@ def benchmark_device_restore_profile(
         },
     }
     result_path = output_dir / "device-restore-profile.json"
-    result_path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+    _write_json(result_path, document)
     print(f"Wrote {result_path}", flush=True)
     return result_path
 
@@ -4496,7 +4501,7 @@ def write_benchmark_metadata(
                 f"device-io resume controls or provenance do not match {path}"
             )
         return path
-    path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
+    _write_json(path, document)
     return path
 
 
@@ -6019,10 +6024,7 @@ def run_native_linux(args: argparse.Namespace) -> int:
                 )
             )
             if args.output is not None:
-                args.output.parent.mkdir(parents=True, exist_ok=True)
-                args.output.write_text(
-                    json.dumps(results, indent=2) + "\n", encoding="utf-8"
-                )
+                _write_json(args.output, results)
                 print(f"Wrote {args.output}", flush=True)
             return 0
         if run_boot:
@@ -6088,8 +6090,7 @@ def run_native_linux(args: argparse.Namespace) -> int:
         results["e2e_comparison"][backend] = comparison
         print_e2e_comparison(backend, comparison)
     if args.output is not None:
-        args.output.parent.mkdir(parents=True, exist_ok=True)
-        args.output.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+        _write_json(args.output, results)
         print(f"Wrote {args.output}", flush=True)
     return 0
 
@@ -6481,8 +6482,7 @@ def run_benchmark(args: argparse.Namespace) -> int:
         )
         if args.output:
             output = args.output.resolve()
-            output.parent.mkdir(parents=True, exist_ok=True)
-            output.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+            _write_json(output, results)
             print(f"Wrote {output}")
         return 0
     kvm_e2e = None
@@ -6654,7 +6654,6 @@ def run_benchmark(args: argparse.Namespace) -> int:
 
     if args.output:
         output = args.output.resolve()
-        output.parent.mkdir(parents=True, exist_ok=True)
-        output.write_text(json.dumps(results, indent=2) + "\n", encoding="utf-8")
+        _write_json(output, results)
         print(f"Wrote {output}")
     return 0
