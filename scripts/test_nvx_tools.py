@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -15871,6 +15872,28 @@ class PositiveFloatTests(unittest.TestCase):
                     "^must be finite and greater than 0$",
                 ):
                     benchmark.positive_float(value)
+
+
+class DoctorProbeTests(unittest.TestCase):
+    def test_build_probe_reports_cache_install_failure(self):
+        with tempfile.TemporaryDirectory() as directory:
+            with (
+                patch.object(doctor.shutil, "which", return_value="/usr/bin/rustc"),
+                patch.object(
+                    doctor.subprocess,
+                    "run",
+                    return_value=subprocess.CompletedProcess([], 0, "", ""),
+                ),
+                patch.object(
+                    doctor.os,
+                    "replace",
+                    side_effect=OSError("permission denied"),
+                ),
+            ):
+                with self.assertRaisesRegex(
+                    common.ScriptError, "failed to cache the host time probe"
+                ):
+                    doctor.build_probe(Path(directory))
 
 
 class GitOutputTests(unittest.TestCase):

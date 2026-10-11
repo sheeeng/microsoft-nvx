@@ -193,11 +193,13 @@ def build_probe(directory: Path) -> Path:
         )
     try:
         os.replace(temporary, target)
-    except OSError:
+    except OSError as error:
         # Another job built the same version first and may be running it.
         temporary.unlink(missing_ok=True)
         if not target.is_file():
-            raise
+            raise ScriptError(
+                f"failed to cache the host time probe: {error}"
+            ) from error
     temporary.with_suffix(".pdb").unlink(missing_ok=True)
     return target
 
