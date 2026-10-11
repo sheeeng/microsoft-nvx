@@ -196,6 +196,13 @@ def require_tool(name: str, message: str | None = None) -> str:
     return executable
 
 
+def normalized_sha256_file(path: Path) -> str:
+    contents = path.read_bytes().replace(b"\r\n", b"\n")
+    if b"\r" in contents:
+        raise ScriptError(f"{path} contains unsupported carriage returns")
+    return hashlib.sha256(contents).hexdigest()
+
+
 def sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as source:
