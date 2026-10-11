@@ -13,11 +13,14 @@ python3 scripts/nvx.py build-guest
 python3 scripts/nvx.py build-openvmm
 ```
 
-Build every guest artifact, including the Ubuntu EROFS distro layer, with:
+Build every guest initramfs and its supporting artifacts with:
 
 ```bash
 python3 scripts/nvx.py build-guest --guest all
 ```
+
+Build the Ubuntu EROFS distro layer separately with the `build-distro-layer`
+command below.
 
 The OpenVMM restore step excludes the compatibility IGVM artifact, which NVX
 does not build or package, so builds do not depend on unrelated upstream
