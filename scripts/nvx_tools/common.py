@@ -237,7 +237,12 @@ def verify_sha256_sums(directory: Path) -> VerifiedChecksumInventory:
     checksum_file = require_file(directory / "SHA256SUMS", "source checksums")
     if checksum_file.is_symlink() or not stat.S_ISREG(checksum_file.stat().st_mode):
         raise ScriptError(f"source checksums must be a regular file: {checksum_file}")
-    checksum_bytes = checksum_file.read_bytes()
+    try:
+        checksum_bytes = checksum_file.read_bytes()
+    except OSError as error:
+        raise ScriptError(
+            f"failed to read source checksums: {checksum_file}"
+        ) from error
     checksum_sha256 = hashlib.sha256(checksum_bytes).hexdigest()
     try:
         checksum_text = checksum_bytes.decode("ascii")
@@ -274,7 +279,12 @@ def verify_sha256_sums(directory: Path) -> VerifiedChecksumInventory:
         packaged_path = directory.joinpath(*path.parts)
         if relative not in packaged_files:
             raise ScriptError(f"invalid checksum path in {checksum_file}: {relative}")
-        actual = sha256_file(packaged_path)
+        try:
+            actual = sha256_file(packaged_path)
+        except OSError as error:
+            raise ScriptError(
+                f"failed to read checksummed file: {packaged_path}"
+            ) from error
         if actual != expected:
             raise ScriptError(
                 f"source checksum mismatch for {relative}: {actual}, "
