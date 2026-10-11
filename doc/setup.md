@@ -203,6 +203,16 @@ shfmt -d -ln bash -i 4 -ci \
 
 Pyright runs in strict mode for both Linux and Windows platform APIs.
 
+Before running workloads or benchmarks, qualify the host for the NVX time ABI
+with the backend that will run the guest:
+
+```bash
+python3 scripts/nvx.py doctor --backend kvm
+```
+
+Use `mshv` on a Linux/MSHV host or `whp` on Windows/WHP. The command runs all
+qualification checks by default; use `--checks` to select checks explicitly.
+
 ### Adversarial campaign controller
 
 The optional `test-adversarial` command additionally requires GitHub Copilot
