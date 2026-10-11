@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
 import os
 import shlex
@@ -1149,18 +1148,14 @@ def build_kernel(config: KernelBuildConfig) -> None:
     source, source_fingerprint = prepare_kernel_source(config)
     input_config = BuildConstants.REPO_ROOT / KernelBuildConstants.INPUT_CONFIG
     input_config_bytes = input_config.read_bytes()
-    input_config_sha256 = hashlib.sha256(input_config_bytes).hexdigest()
+    input_config_sha256 = sha256_file(input_config)
     fragment = (
         BuildConstants.REPO_ROOT / KernelBuildConstants.DEBUG_CONFIG_FRAGMENT
         if config.debug
         else None
     )
     fragment_bytes = fragment.read_bytes() if fragment is not None else None
-    fragment_sha256 = (
-        hashlib.sha256(fragment_bytes).hexdigest()
-        if fragment_bytes is not None
-        else None
-    )
+    fragment_sha256 = sha256_file(fragment) if fragment is not None else None
     provenance_inputs = _kernel_provenance_inputs(
         source_fingerprint,
         input_config_sha256,
