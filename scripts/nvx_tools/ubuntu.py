@@ -753,13 +753,16 @@ def _customize_root(root: Path) -> None:
 
 
 def _validate_ubuntu_identity(root: Path) -> None:
-    records = parse_deb822(
-        (root / "var" / "lib" / "dpkg" / "status").read_text(encoding="utf-8")
-    )
+    try:
+        status = (root / "var" / "lib" / "dpkg" / "status").read_text(encoding="utf-8")
+        os_release_text = (root / "etc" / "os-release").read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        raise ScriptError("Ubuntu Base identity metadata cannot be read") from error
+    records = parse_deb822(status)
     if not records:
         raise ScriptError("Ubuntu Base package database is empty")
     os_release: dict[str, str] = {}
-    for line in (root / "etc" / "os-release").read_text(encoding="utf-8").splitlines():
+    for line in os_release_text.splitlines():
         key, separator, value = line.partition("=")
         if separator:
             os_release[key] = value.strip('"')

@@ -6221,6 +6221,13 @@ class BuildTests(unittest.TestCase):
             ):
                 ubuntu.load_package_lock(path)
 
+    def test_ubuntu_identity_read_errors_are_actionable(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(
+                common.ScriptError, "identity metadata cannot be read"
+            ):
+                ubuntu._validate_ubuntu_identity(Path(temporary))
+
     def test_ubuntu_safe_extractor_rejects_archive_symlink_escape(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
