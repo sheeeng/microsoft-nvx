@@ -112,11 +112,14 @@ def _write_new_json(path: Path, value: dict[str, Any]) -> None:
     except FileExistsError as error:
         raise ScriptError("failed to reserve an outcome report staging file") from error
     try:
-        with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as output:
-            json.dump(value, output, indent=2, sort_keys=True)
-            output.write("\n")
-            output.flush()
-            os.fsync(output.fileno())
+        try:
+            with os.fdopen(descriptor, "w", encoding="utf-8", newline="\n") as output:
+                json.dump(value, output, indent=2, sort_keys=True)
+                output.write("\n")
+                output.flush()
+                os.fsync(output.fileno())
+        except OSError as error:
+            raise ScriptError(f"failed to write outcome report: {resolved}") from error
         try:
             os.link(temporary, resolved)
         except FileExistsError as error:

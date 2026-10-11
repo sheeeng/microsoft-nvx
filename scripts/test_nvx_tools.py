@@ -10976,6 +10976,24 @@ class SandboxTests(unittest.TestCase):
                     sandbox_lifecycle.ManagedExecResult(0, "exit", b"", b""),
                 )
 
+    def test_managed_exec_outcome_reports_write_errors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "outcome.json"
+            with (
+                patch.object(
+                    sandbox_lifecycle.os,
+                    "fsync",
+                    side_effect=OSError("filesystem is read-only"),
+                ),
+                self.assertRaisesRegex(
+                    common.ScriptError, "failed to write outcome report"
+                ),
+            ):
+                sandbox_lifecycle.write_exec_outcome(
+                    path,
+                    sandbox_lifecycle.ManagedExecResult(0, "exit", b"", b""),
+                )
+
     def test_managed_stop_cleans_runtime_state_if_report_is_invalid(self):
         with tempfile.TemporaryDirectory() as temporary:
             state = Path(temporary)
