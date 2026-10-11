@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -435,6 +436,16 @@ def _write_release_fixture(
         "binary": binary,
     }
     return paths, kernel_inputs, revision
+
+
+class DoctorTests(unittest.TestCase):
+    def test_invalid_rust_unicode_escape_is_a_script_error(self):
+        with self.assertRaisesRegex(
+            common.ScriptError, r"invalid Rust Unicode escape 'u\{110000\}'"
+        ):
+            doctor.parse_cpu_profile_line(
+                'NVX-CPU-PROFILE: status=pass detail="bad \\u{110000}"'
+            )
 
 
 class CliTests(unittest.TestCase):

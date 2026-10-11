@@ -433,7 +433,10 @@ def parse_cpu_profile_line(line: str) -> dict[str, str]:
 def _rust_unescape(match: re.Match[str]) -> str:
     escape = match.group(1)
     if escape.startswith("u{"):
-        return chr(int(escape[2:-1], 16))
+        try:
+            return chr(int(escape[2:-1], 16))
+        except ValueError as error:
+            raise ScriptError(f"invalid Rust Unicode escape {escape!r}") from error
     return {"n": "\n", "r": "\r", "t": "\t", "0": "\0"}.get(escape, escape)
 
 
