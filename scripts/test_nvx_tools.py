@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    create_linux_source_archive,
     guests,
     release,
     sandbox,
@@ -15857,6 +15858,31 @@ class PositiveIntTests(unittest.TestCase):
     def test_accepts_custom_error_message(self):
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "^must be at least 1$"):
             common.positive_int("0", message="must be at least 1")
+
+
+class CreateLinuxSourceArchiveTests(unittest.TestCase):
+    def test_missing_config_preserves_file_not_found_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            config = root / "missing" / "vmlinux.config"
+            args = argparse.Namespace(config=config, output=root / "archive.tar.gz")
+
+            with patch.object(
+                create_linux_source_archive,
+                "prepare_kernel_source",
+                return_value=(source, None),
+            ):
+                with self.assertRaises(FileNotFoundError) as raised:
+                    create_linux_source_archive.command_create_linux_source_archive(
+                        args
+                    )
+
+            self.assertEqual(
+                str(raised.exception),
+                f"generated kernel config not found: {config.resolve()}",
+            )
 
 
 class PositiveFloatTests(unittest.TestCase):
