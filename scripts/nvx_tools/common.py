@@ -311,6 +311,15 @@ def run_checked(
         ) from error
 
 
+def terminate_process(process: subprocess.Popen[bytes]) -> None:
+    process.terminate()
+    try:
+        process.wait(timeout=5)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait(timeout=5)
+
+
 class _CrossOriginRedirectHandler(urllib.request.HTTPRedirectHandler):
     """Drops credentials when a download leaves its origin."""
 

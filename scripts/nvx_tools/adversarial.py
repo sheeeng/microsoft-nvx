@@ -54,6 +54,7 @@ from nvx_tools.common import (
     positive_int,
     remaining_timeout,
     require_tool,
+    terminate_process,
 )
 from nvx_tools.common import (
     repository_metadata as _controller_metadata,
@@ -589,12 +590,7 @@ class ExecutorClient:
             if self._local:
                 terminate_process_tree(self._process, process_group=True)
                 return
-            self._process.terminate()
-            try:
-                self._process.wait(timeout=5.0)
-            except subprocess.TimeoutExpired:
-                self._process.kill()
-                self._process.wait(timeout=5.0)
+            terminate_process(self._process)
 
     def __enter__(self) -> ExecutorClient:
         return self
