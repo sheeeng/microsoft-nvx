@@ -11247,6 +11247,14 @@ class SandboxTests(unittest.TestCase):
 
 
 class BenchmarkTests(unittest.TestCase):
+    def test_missing_benchmark_script_is_a_script_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with patch.object(benchmark, "BENCHMARK_SCRIPTS_DIR", Path(temporary)):
+                with self.assertRaisesRegex(
+                    common.ScriptError, "failed to read benchmark script"
+                ):
+                    benchmark._read_benchmark_script("missing.sh")
+
     def test_kvm_worker_result_decoding(self):
         completed = subprocess.CompletedProcess(
             ["worker"],
