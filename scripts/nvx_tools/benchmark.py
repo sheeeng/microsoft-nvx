@@ -41,7 +41,7 @@ from .build_constants import (
     KernelBuildConstants,
     OpenVMMBuildConstants,
 )
-from .common import bytes_to_mib, sha256_file
+from .common import bytes_to_mib, remaining_timeout, sha256_file
 from .time_abi import TimeAbiFailure, TimeAbiMonitor, status_script
 
 BOOT_MARKER = b"ALPINE-MICROVM-BOOT-OK"
@@ -1698,7 +1698,7 @@ class SeparatedOutput:
         """
         deadline = time.monotonic() + timeout
         while self._open_streams:
-            remaining = deadline - time.monotonic()
+            remaining = remaining_timeout(deadline)
             if remaining <= 0:
                 return False
             try:

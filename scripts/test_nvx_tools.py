@@ -12194,6 +12194,14 @@ class BenchmarkTests(unittest.TestCase):
         )
         self.assertTrue(contents.endswith(b"~ # "))
 
+    def test_separated_output_drain_uses_non_negative_timeout(self):
+        output = object.__new__(benchmark.SeparatedOutput)
+        output._open_streams = {"console"}
+        output.get = MagicMock(side_effect=queue.Empty)
+        with patch.object(benchmark.time, "monotonic", side_effect=(10.0, 9.0)):
+            self.assertFalse(output.drain(1.0))
+        output.get.assert_called_once_with(2.0)
+
     def test_interactive_process_gives_stderr_its_own_pipe_on_request(self):
         for platform in ("linux", "win32"):
             for separate_stderr in (False, True):
