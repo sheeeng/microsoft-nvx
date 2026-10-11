@@ -12,7 +12,8 @@ under `openvmm/target/release/`, so no local build is required. Set `GH_TOKEN`
 to a token with contents read access when downloading from a private repository.
 On Linux, pass `--hypervisor mshv` to both commands to use the MSHV package.
 
-The CLI chooses WHP on Windows and KVM on Linux:
+The CLI chooses WHP on Windows. On Linux, it chooses MSHV when `/dev/mshv`
+is present and otherwise chooses KVM:
 
 ```bash
 python3 scripts/nvx.py run
