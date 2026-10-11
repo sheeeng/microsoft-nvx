@@ -16243,6 +16243,19 @@ class SharedFileTests(unittest.TestCase):
             self.assertTrue(all(member.mtime == 0 for member in members))
             self.assertTrue(all(member.uid == member.gid == 0 for member in members))
 
+    def test_source_archive_reports_output_filesystem_errors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "source"
+            source.mkdir()
+            output = root / "archive.tar.gz"
+
+            with (
+                patch.object(Path, "open", side_effect=PermissionError("denied")),
+                self.assertRaisesRegex(common.ScriptError, "failed to create archive"),
+            ):
+                archive.create_reproducible_tar_gz(output, [(source, "bundle")])
+
 
 class DownloadTests(unittest.TestCase):
     def test_rejects_nonpositive_attempts(self):
