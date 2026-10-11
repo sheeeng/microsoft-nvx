@@ -1505,6 +1505,17 @@ class DoctorTests(unittest.TestCase):
         fields = time_abi.parse_fields(line.removeprefix(doctor.DOCTOR_PREFIX))
         self.assertEqual(fields["detail"], 'say "x" \\ y')
 
+    def test_host_clocksource_reports_unreadable_sysfs_as_script_error(self):
+        with patch.object(
+            doctor.Path,
+            "read_text",
+            side_effect=OSError("permission denied"),
+        ):
+            with self.assertRaisesRegex(
+                doctor.ScriptError, "failed to read host clocksource"
+            ):
+                doctor.host_clocksource()
+
     def test_backend_check_requires_a_usable_device(self):
         context = doctor_context(self.root)
         existing: set[str] = set()
