@@ -18,7 +18,7 @@ from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from http.client import HTTPMessage
 from pathlib import Path, PurePosixPath
-from typing import IO
+from typing import IO, cast
 
 from .build_constants import (
     BuildConstants,
@@ -37,6 +37,20 @@ def strict_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
             raise ScriptError(f"duplicate JSON property: {key}")
         result[key] = value
     return result
+
+
+def require_package_lock_records(
+    document: dict[str, object],
+    path: Path,
+    expected_header: Mapping[str, object],
+) -> list[object]:
+    for field, expected in expected_header.items():
+        if document.get(field) != expected:
+            raise ScriptError(f"{path} {field} must be {expected!r}")
+    raw_packages = document.get("packages")
+    if not isinstance(raw_packages, list) or not raw_packages:
+        raise ScriptError(f"{path} must contain a nonempty packages array")
+    return cast(list[object], raw_packages)
 
 
 def positive_int(value: str, *, message: str = "must be greater than zero") -> int:

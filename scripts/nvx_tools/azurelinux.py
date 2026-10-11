@@ -13,7 +13,12 @@ from .build_constants import (
     BuildConstants,
     DockerBuildConstants,
 )
-from .common import ScriptError, download_verified, sha256_file
+from .common import (
+    ScriptError,
+    download_verified,
+    require_package_lock_records,
+    sha256_file,
+)
 
 _RPM_FIELD = re.compile(r"[A-Za-z0-9][A-Za-z0-9._+~^-]*")
 _SHA256 = re.compile(r"[0-9a-f]{64}")
@@ -45,20 +50,18 @@ def load_package_lock(path: Path | None = None) -> tuple[AzureLinuxLockedPackage
     if not isinstance(raw_document, dict):
         raise ScriptError(f"{path} must contain a JSON object")
     document = cast(dict[str, object], raw_document)
-    expected_header = {
-        "format": AzureLinuxBuildConstants.PACKAGE_LOCK_FORMAT,
-        "release": AzureLinuxBuildConstants.VERSION,
-        "architecture": AzureLinuxBuildConstants.ARCHITECTURE,
-        "image": AzureLinuxBuildConstants.IMAGE,
-    }
-    for field, expected in expected_header.items():
-        if document.get(field) != expected:
-            raise ScriptError(f"{path} {field} must be {expected!r}")
-    raw_packages = document.get("packages")
-    if not isinstance(raw_packages, list) or not raw_packages:
-        raise ScriptError(f"{path} must contain a nonempty packages array")
+    raw_packages = require_package_lock_records(
+        document,
+        path,
+        {
+            "format": AzureLinuxBuildConstants.PACKAGE_LOCK_FORMAT,
+            "release": AzureLinuxBuildConstants.VERSION,
+            "architecture": AzureLinuxBuildConstants.ARCHITECTURE,
+            "image": AzureLinuxBuildConstants.IMAGE,
+        },
+    )
     packages: list[AzureLinuxLockedPackage] = []
-    for raw_package in cast(list[object], raw_packages):
+    for raw_package in raw_packages:
         if not isinstance(raw_package, dict):
             raise ScriptError(f"{path} contains a non-object package record")
         record = cast(dict[str, object], raw_package)
