@@ -205,16 +205,16 @@ Pyright runs in strict mode for both Linux and Windows platform APIs.
 
 ### Adversarial campaign controller
 
-The optional `test-adversarial` command additionally requires GitHub Copilot
-CLI to be installed and authenticated before the run. Validate the controller
-without changing authentication:
+Adaptive `test-adversarial` runs additionally require GitHub Copilot CLI to be
+installed and authenticated before the run; replay runs do not. Validate the
+controller without changing authentication:
 
 ```bash
 copilot --version
 ```
 
-The harness performs its own non-interactive authenticated smoke prompt and
-fails preflight if it cannot complete. It deliberately does not install
+The adaptive harness performs its own non-interactive authenticated smoke prompt
+and fails preflight if it cannot complete. It deliberately does not install
 Copilot CLI or run `copilot login`. The repository's
 `.github/workflows/copilot-setup-steps.yml` prepares Copilot cloud agent
 sessions but does not install or authenticate Copilot CLI, so it does not
