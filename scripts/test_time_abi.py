@@ -2086,6 +2086,18 @@ class DoctorTests(unittest.TestCase):
             check(doctor_context(self.root), records([2793437000.0] * 2))
         with self.assertRaisesRegex(doctor.ScriptError, "no stability clock"):
             check(ci_context(), records([2793437000.0] * 2, interval_s=1.0)[:1])
+        with (
+            patch.object(
+                Path,
+                "read_text",
+                side_effect=OSError("permission denied"),
+            ),
+            self.assertRaisesRegex(
+                doctor.ScriptError,
+                r"cannot read host clocksource .*permission denied",
+            ),
+        ):
+            doctor.host_clocksource()
         # The clocksource is evidence on every backend.
         for backend, clocksource in (
             ("kvm", "hpet"),

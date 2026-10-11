@@ -146,7 +146,12 @@ def host_is_windows() -> bool:
 
 
 def host_clocksource() -> str:
-    return CLOCKSOURCE_PATH.read_text(encoding="utf-8").strip()
+    try:
+        return CLOCKSOURCE_PATH.read_text(encoding="utf-8").strip()
+    except (OSError, UnicodeError) as error:
+        raise ScriptError(
+            f"cannot read host clocksource {CLOCKSOURCE_PATH}: {error}"
+        ) from error
 
 
 def _escape_markdown(text: str) -> str:
