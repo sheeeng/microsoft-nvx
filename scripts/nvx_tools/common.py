@@ -397,14 +397,24 @@ def download(
 
 def download_verified(url: str, destination: Path, expected_sha256: str) -> None:
     if destination.is_file():
-        actual_sha256 = sha256_file(destination)
+        try:
+            actual_sha256 = sha256_file(destination)
+        except OSError as error:
+            raise ScriptError(
+                f"failed to verify cached download {destination}: {error}"
+            ) from error
         if actual_sha256 == expected_sha256:
             return
         print(
             f">> discarding {destination.name}: SHA-256 is {actual_sha256}, "
             f"expected {expected_sha256}"
         )
-        destination.unlink()
+        try:
+            destination.unlink()
+        except OSError as error:
+            raise ScriptError(
+                f"failed to discard cached download {destination}: {error}"
+            ) from error
     print(f">> downloading {destination.name}")
     download(url, destination, expected_sha256=expected_sha256)
 

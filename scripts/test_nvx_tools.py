@@ -16336,6 +16336,26 @@ class DownloadTests(unittest.TestCase):
 
             self.assertEqual(destination.read_bytes(), payload)
 
+    def test_reports_unreadable_cached_archive(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            destination = Path(temporary) / "archive.tar.xz"
+            destination.write_bytes(b"cached archive")
+
+            with (
+                patch.object(common, "sha256_file", side_effect=OSError("denied")),
+                patch.object(common, "download") as download,
+                self.assertRaisesRegex(
+                    common.ScriptError, "failed to verify cached download"
+                ),
+            ):
+                common.download_verified(
+                    "https://example.invalid/archive.tar.xz",
+                    destination,
+                    "0" * 64,
+                )
+
+            download.assert_not_called()
+
 
 if __name__ == "__main__":
     unittest.main()
