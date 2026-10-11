@@ -4834,6 +4834,17 @@ class UbuntuSourceCollectionTests(unittest.TestCase):
 
         self.assertIn("cannot read Ubuntu package manifest", str(context.exception))
 
+    def test_unreadable_ubuntu_dsc_is_reported_as_script_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            metadata = Path(temporary) / "source.dsc"
+            metadata.mkdir()
+
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                "cannot read Debian source metadata",
+            ):
+                collect_ubuntu_sources._dsc_document(metadata)
+
 
 class AlpineSourceCollectionTests(unittest.TestCase):
     INSTALL_SCRIPT = b"#!/bin/sh\nexit 0\n"
