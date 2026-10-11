@@ -19,7 +19,7 @@ from .build_constants import (
     KernelBuildConstants,
 )
 from .ci import OPENVMM_TEST_BACKENDS, validate_openvmm_test_backend
-from .common import artifact_path, openvmm_binary_path, require_file
+from .common import ScriptError, artifact_path, openvmm_binary_path, require_file
 
 CRATE_DIRECTORY = BuildConstants.REPO_ROOT / "aci_edge_sandboxes"
 E2E_TEST_NAME = "openvmm_e2e"
@@ -142,6 +142,11 @@ def command_test_aci_edge_sandboxes(args: argparse.Namespace) -> int:
         environment.update(e2e_environment(backend, state_root, output_dir))
         command = e2e_command(cast(str, args.cargo))
         print(f">> {shlex.join(command)}", flush=True)
-        return subprocess.run(command, env=environment, check=False).returncode
+        try:
+            return subprocess.run(command, env=environment, check=False).returncode
+        except OSError as error:
+            raise ScriptError(
+                f"failed to run aci_edge_sandboxes test: {error}"
+            ) from error
     finally:
         release_state(directory, state_root)

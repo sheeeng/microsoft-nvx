@@ -9347,6 +9347,31 @@ class AciSandboxRunnerTests(unittest.TestCase):
         self.assertEqual(len(observed), 1)
         self.assertEqual(Path(observed[0]).name, "state")
 
+    def test_handler_reports_test_launch_failures(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            args = argparse.Namespace(
+                backend="kvm",
+                output_dir=Path(temporary) / "results",
+                cargo="missing-cargo",
+            )
+            with (
+                patch.object(aci_edge_sandboxes_tests, "validate_openvmm_test_backend"),
+                patch.object(
+                    aci_edge_sandboxes_tests,
+                    "e2e_environment",
+                    return_value={},
+                ),
+                patch.object(
+                    aci_edge_sandboxes_tests.subprocess,
+                    "run",
+                    side_effect=OSError("executable not found"),
+                ),
+            ):
+                with self.assertRaisesRegex(
+                    common.ScriptError, "failed to run aci_edge_sandboxes test"
+                ):
+                    aci_edge_sandboxes_tests.command_test_aci_edge_sandboxes(args)
+
     def _run_leaving(
         self, records: dict[str, object] | None, *, interrupt: bool = False
     ) -> tuple[Path, str]:
