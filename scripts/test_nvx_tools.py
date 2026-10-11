@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -15836,6 +15837,20 @@ class ReleaseTests(unittest.TestCase):
                     self.assertFalse(destination.exists())
                 else:
                     self.assertEqual(destination.read_bytes(), name.encode("ascii"))
+
+
+class DoctorProbeTests(unittest.TestCase):
+    def test_probe_path_uses_source_digest(self):
+        payload = b"probe source"
+        expected = hashlib.sha256(payload).hexdigest()[:16]
+        with tempfile.TemporaryDirectory() as temporary:
+            source = Path(temporary) / "host_time_probe.rs"
+            source.write_bytes(payload)
+            with patch.object(doctor, "PROBE_SOURCE", source):
+                self.assertEqual(
+                    doctor.probe_path(Path(temporary)),
+                    Path(temporary) / f"nvx-host-time-probe-{expected}",
+                )
 
 
 class PositiveIntTests(unittest.TestCase):
