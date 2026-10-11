@@ -2378,6 +2378,29 @@ class DoctorTests(unittest.TestCase):
         )
         self.assertIn("check=H5 status=pass", stdout.getvalue())
 
+        with (
+            patch.dict(doctor.CHECKS, {"H2": passing("H2")}),
+            patch.object(Path, "open", side_effect=OSError("read-only filesystem")),
+            contextlib.redirect_stdout(io.StringIO()),
+            self.assertRaisesRegex(
+                doctor.ScriptError, "failed to write doctor summary"
+            ),
+        ):
+            doctor.run(
+                doctor_parser().parse_args(
+                    [
+                        "--backend",
+                        "mshv",
+                        "--checks",
+                        "H2",
+                        "--summary",
+                        str(summary),
+                        "--probe-dir",
+                        str(self.root),
+                    ]
+                )
+            )
+
     def test_run_selects_the_cpu_fingerprint_or_runs_without_openvmm(self):
         seen: list[Path | None] = []
         schedules: list[doctor.Schedule] = []
