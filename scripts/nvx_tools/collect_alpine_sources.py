@@ -106,12 +106,22 @@ def _run(
 ) -> subprocess.CompletedProcess[bytes]:
     display = " ".join(os.fspath(argument) for argument in command)
     print(f">> {display}")
-    return subprocess.run(
-        [os.fspath(argument) for argument in command],
-        cwd=cwd,
-        check=True,
-        capture_output=capture,
-    )
+    try:
+        return subprocess.run(
+            [os.fspath(argument) for argument in command],
+            cwd=cwd,
+            check=True,
+            capture_output=capture,
+        )
+    except OSError as error:
+        raise SourceError(
+            f"cannot run source-collection command {display}: {error}"
+        ) from error
+    except subprocess.CalledProcessError as error:
+        raise SourceError(
+            f"source-collection command failed with exit status {error.returncode}: "
+            f"{display}"
+        ) from error
 
 
 def _prepare_aports(cache: Path, branch: str) -> None:

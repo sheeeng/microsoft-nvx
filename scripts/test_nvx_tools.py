@@ -4942,6 +4942,29 @@ class AlpineSourceCollectionTests(unittest.TestCase):
 
                 self.assertIn("package manifest", str(context.exception))
 
+    def test_external_command_failures_are_reported_as_source_errors(self):
+        with patch.object(
+            collect_alpine_sources.subprocess,
+            "run",
+            side_effect=FileNotFoundError(2, "No such file or directory"),
+        ):
+            with self.assertRaisesRegex(
+                collect_alpine_sources.SourceError,
+                "cannot run source-collection command git clone",
+            ):
+                collect_alpine_sources._run(["git", "clone", "url", "output"])
+
+        with patch.object(
+            collect_alpine_sources.subprocess,
+            "run",
+            side_effect=subprocess.CalledProcessError(128, ["git", "clone"]),
+        ):
+            with self.assertRaisesRegex(
+                collect_alpine_sources.SourceError,
+                "command failed with exit status 128",
+            ):
+                collect_alpine_sources._run(["git", "clone", "url", "output"])
+
     def test_recipe_symlink_is_collected_as_verified_regular_file(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
