@@ -14476,6 +14476,30 @@ class ReleaseTests(unittest.TestCase):
             ):
                 release._validate_alpine_sources([])
 
+    def test_ubuntu_source_validation_rejects_malformed_manifests(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source_dir = Path(temporary)
+            ubuntu_dir = source_dir / "ubuntu"
+            ubuntu_dir.mkdir()
+            source_manifest = ubuntu_dir / "manifest.json"
+            package_manifest = source_dir / "packages.json"
+            source_manifest.write_text('{"packages": []}', encoding="utf-8")
+            package_manifest.write_text("{}", encoding="utf-8")
+
+            for malformed, expected in (
+                (source_manifest, "invalid collected Ubuntu source manifest"),
+                (package_manifest, "invalid Ubuntu package manifest"),
+            ):
+                malformed.write_text("{", encoding="utf-8")
+                with (
+                    self.subTest(manifest=malformed.name),
+                    patch.object(BuildConstants, "SOURCE_DIR", source_dir),
+                    self.assertRaisesRegex(common.ScriptError, expected),
+                ):
+                    release._validate_ubuntu_sources([package_manifest])
+                if malformed == source_manifest:
+                    source_manifest.write_text('{"packages": []}', encoding="utf-8")
+
     def test_alpine_source_validation_checks_recorded_executables(self):
         with tempfile.TemporaryDirectory() as temporary:
             source_dir = Path(temporary)
