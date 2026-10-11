@@ -559,8 +559,7 @@ def network_port(value: str) -> int:
 
 
 def run_checked(command: Sequence[str], *, cwd: Path | None = None) -> None:
-    print("+", subprocess.list2cmdline(list(command)), flush=True)
-    subprocess.run(command, cwd=cwd, check=True)
+    common.run_checked(command, cwd=cwd, echo=True)
 
 
 def _read_benchmark_script(name: str) -> str:

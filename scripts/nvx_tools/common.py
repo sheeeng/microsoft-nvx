@@ -295,8 +295,11 @@ def run_checked(
     cwd: Path | None = None,
     env: Mapping[str, str] | None = None,
     input_bytes: bytes | None = None,
+    echo: bool = False,
 ) -> None:
     command = tuple(os.fspath(arg) for arg in args)
+    if echo:
+        print("+", subprocess.list2cmdline(list(command)), flush=True)
     try:
         subprocess.run(
             command,
