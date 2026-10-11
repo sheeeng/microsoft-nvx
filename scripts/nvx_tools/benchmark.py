@@ -1721,6 +1721,11 @@ class SeparatedOutput:
         return self.contents()[-size:].decode("utf-8", "replace")
 
 
+def _write_log(log_path: Path, output: bytes | bytearray) -> None:
+    log_path.parent.mkdir(parents=True, exist_ok=True)
+    log_path.write_bytes(bytes(output))
+
+
 def record_adversarial_openvmm_pid(
     pid: int,
     environment: dict[str, str],
@@ -1954,8 +1959,7 @@ def measure_once(
             output.drain(
                 OUTPUT_DRAIN_TIMEOUT_SECONDS, on_console=scan_console_unchecked
             )
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-            log_path.write_bytes(output.contents())
+            _write_log(log_path, output.contents())
         interaction.close()
         if cleanup_managed_network:
             cleanup_managed_tap(process.pid)
@@ -2586,8 +2590,7 @@ def run_guest_script(
 
     if log_path is not None:
         try:
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-            log_path.write_bytes(output)
+            _write_log(log_path, output)
         except BaseException as cleanup_error:
             cleanup_errors.append(cleanup_error)
     try:
@@ -2751,8 +2754,7 @@ def capture_device_restore_snapshot(
             raise RuntimeError(f"{error}\n--- OpenVMM output ---\n{tail}") from error
         raise
     finally:
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        log_path.write_bytes(output)
+        _write_log(log_path, output)
         interaction.close()
 
 
@@ -2883,8 +2885,7 @@ def run_device_restore_sample(
             raise RuntimeError(f"{error}\n--- OpenVMM output ---\n{tail}") from error
         raise
     finally:
-        log_path.parent.mkdir(parents=True, exist_ok=True)
-        log_path.write_bytes(output)
+        _write_log(log_path, output)
         interaction.close()
 
 
@@ -4908,8 +4909,7 @@ def capture_snapshot(
         raise
     finally:
         if log_path is not None:
-            log_path.parent.mkdir(parents=True, exist_ok=True)
-            log_path.write_bytes(output.contents())
+            _write_log(log_path, output.contents())
         interaction.close()
 
 
