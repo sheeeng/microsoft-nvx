@@ -906,7 +906,7 @@ class CliTests(unittest.TestCase):
                 return path
 
             with (
-                patch.object(nvx, "require_file", side_effect=require),
+                patch.object(common, "require_file", side_effect=require),
                 patch.object(nvx, "_format_command", return_value="formatted"),
             ):
                 nvx.command_sandbox(args)
@@ -1321,6 +1321,7 @@ class CliTests(unittest.TestCase):
                 args = nvx.parse_args(arguments)
                 with (
                     patch.object(nvx, "require_file", side_effect=require),
+                    patch.object(common, "require_file", side_effect=require),
                     patch.object(sandbox, "require_file", side_effect=require),
                     patch.object(
                         nvx, "_format_command", return_value="formatted"
@@ -10023,7 +10024,7 @@ class SandboxTests(unittest.TestCase):
                 return path
 
             with (
-                patch.object(nvx, "require_file", side_effect=require),
+                patch.object(common, "require_file", side_effect=require),
                 patch.object(
                     nvx, "_format_command", return_value="formatted"
                 ) as format_command,
@@ -10065,7 +10066,7 @@ class SandboxTests(unittest.TestCase):
                 return path
 
             with (
-                patch.object(nvx, "require_file", side_effect=require),
+                patch.object(common, "require_file", side_effect=require),
                 patch.object(
                     nvx, "_format_command", return_value="formatted"
                 ) as format_command,
@@ -10172,7 +10173,7 @@ class SandboxTests(unittest.TestCase):
                 return path
 
             with (
-                patch.object(nvx, "require_file", side_effect=require),
+                patch.object(common, "require_file", side_effect=require),
                 patch.object(
                     nvx, "_format_command", return_value="formatted"
                 ) as format_command,
@@ -10353,7 +10354,7 @@ class SandboxTests(unittest.TestCase):
                 return path
 
             with (
-                patch.object(sandbox_lifecycle, "require_file", side_effect=require),
+                patch.object(common, "require_file", side_effect=require),
                 patch.object(
                     sandbox_lifecycle.subprocess, "Popen", return_value=process
                 ) as popen,
@@ -10523,7 +10524,7 @@ class SandboxTests(unittest.TestCase):
                 return path
 
             with (
-                patch.object(sandbox_lifecycle, "require_file", side_effect=require),
+                patch.object(common, "require_file", side_effect=require),
                 patch.object(
                     sandbox_lifecycle.subprocess, "Popen", return_value=process
                 ) as popen,
@@ -10723,7 +10724,7 @@ class SandboxTests(unittest.TestCase):
                 return path
 
             with (
-                patch.object(sandbox_lifecycle, "require_file", side_effect=require),
+                patch.object(common, "require_file", side_effect=require),
                 patch.object(
                     sandbox_lifecycle.subprocess, "Popen", return_value=process
                 ) as popen,
@@ -10796,7 +10797,7 @@ class SandboxTests(unittest.TestCase):
 
             with (
                 patch.object(
-                    sandbox_lifecycle,
+                    common,
                     "require_file",
                     side_effect=require,
                 ),
@@ -10872,7 +10873,7 @@ class SandboxTests(unittest.TestCase):
 
             with (
                 patch.object(
-                    sandbox_lifecycle,
+                    common,
                     "require_file",
                     side_effect=require,
                 ),
@@ -11204,9 +11205,7 @@ class SandboxTests(unittest.TestCase):
                 process.stdin = io.BytesIO()
                 process.poll.return_value = exit_status
                 with (
-                    patch.object(
-                        sandbox_lifecycle, "require_file", side_effect=require
-                    ),
+                    patch.object(common, "require_file", side_effect=require),
                     patch.object(
                         sandbox_lifecycle.subprocess, "Popen", return_value=process
                     ),

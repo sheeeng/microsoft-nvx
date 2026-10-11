@@ -39,7 +39,6 @@ from nvx_tools.build_config import (
     OpenVmmBuildConfig,
 )
 from nvx_tools.build_constants import (
-    AlpineBuildConstants,
     BuildConstants,
     InitramfsBuildConstants,
     KernelBuildConstants,
@@ -63,6 +62,7 @@ from nvx_tools.common import (
     ScriptError,
     artifact_path,
     openvmm_binary_path,
+    require_alpine_runtime_artifacts,
     require_file,
     sha256_file,
 )
@@ -655,14 +655,7 @@ def command_sandbox(args: argparse.Namespace) -> None:
         )
     assert operation == "run"
     assert launch is not None
-    executable = require_file(openvmm_binary_path(), "OpenVMM release binary")
-    kernel = require_file(
-        artifact_path(KernelBuildConstants.BINARY_NAME), "Linux direct kernel"
-    )
-    initrd = require_file(
-        artifact_path(AlpineBuildConstants.INITRAMFS_NAME),
-        "initramfs",
-    )
+    executable, kernel, initrd = require_alpine_runtime_artifacts()
     command = [
         str(executable),
         *launch.openvmm_arguments(),

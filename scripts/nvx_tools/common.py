@@ -21,7 +21,9 @@ from pathlib import Path, PurePosixPath
 from typing import IO
 
 from .build_constants import (
+    AlpineBuildConstants,
     BuildConstants,
+    KernelBuildConstants,
     OpenVMMBuildConstants,
 )
 
@@ -79,6 +81,17 @@ def openvmm_binary_path() -> Path:
         / OpenVMMBuildConstants.BUILD_PROFILE
         / executable
     )
+
+
+def require_alpine_runtime_artifacts() -> tuple[Path, Path, Path]:
+    executable = require_file(openvmm_binary_path(), "OpenVMM release binary")
+    kernel = require_file(
+        artifact_path(KernelBuildConstants.BINARY_NAME), "Linux direct kernel"
+    )
+    initrd = require_file(
+        artifact_path(AlpineBuildConstants.INITRAMFS_NAME), "initramfs"
+    )
+    return executable, kernel, initrd
 
 
 @dataclass(frozen=True)
