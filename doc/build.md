@@ -68,6 +68,13 @@ build/openvmm.provenance.json
 openvmm/target/release/openvmm[.exe]
 ```
 
+When `--guest azurelinux` is selected, the build also produces:
+
+```text
+build/initramfs-azurelinux.cpio.gz
+build/initramfs-azurelinux.cpio.gz.packages.json
+```
+
 Programmatic callers can select the backend and override the output destination
 through [`OpenVmmBuildConfig`](../scripts/nvx_tools/build_config.py). Native and
 musl builds normalize the newly built executable to that destination before
