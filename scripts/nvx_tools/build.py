@@ -10,6 +10,7 @@ import shutil
 import ssl
 import subprocess
 import sys
+from collections.abc import Mapping
 from pathlib import Path
 from typing import TypedDict
 
@@ -60,6 +61,10 @@ class ApkPackage(TypedDict):
     description: str | None
     aports_commit: str | None
     build_time: str | None
+
+
+def _write_json(path: Path, document: Mapping[str, object]) -> None:
+    path.write_text(json.dumps(document, indent=2) + "\n", encoding="utf-8")
 
 
 def _run_openvmm_command(
@@ -390,7 +395,7 @@ def record_openvmm_provenance(config: OpenVmmBuildConfig) -> None:
     }
     path = config.build_directory / OpenVMMBuildConstants.PROVENANCE_NAME
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(provenance, indent=2) + "\n", encoding="utf-8")
+    _write_json(path, provenance)
 
 
 def detect_openvmm_platform(backend: OpenVmmBackend | None = None) -> OpenVmmPlatform:
@@ -910,10 +915,7 @@ def _write_ubuntu_manifest(
             "input_sha256": input_sha256,
         }
     )
-    manifest.write_text(
-        json.dumps(document, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    _write_json(manifest, document)
 
 
 def _guest_customization_files(descriptor: GuestDescriptor) -> tuple[Path, ...]:
@@ -1054,10 +1056,7 @@ def build_distro_layer(config: DistroLayerBuildConfig) -> None:
             ]
         )
         document["artifact_sha256"] = sha256_file(temporary_output)
-        temporary_manifest.write_text(
-            json.dumps(document, indent=2) + "\n",
-            encoding="utf-8",
-        )
+        _write_json(temporary_manifest, document)
         temporary_output.replace(output)
         temporary_manifest.replace(manifest)
     finally:
@@ -1221,10 +1220,7 @@ def build_kernel(config: KernelBuildConfig) -> None:
         "kernel_sha256": sha256_file(config.output),
         "config_sha256": sha256_file(generated_config),
     }
-    provenance_path.write_text(
-        json.dumps(provenance, indent=2) + "\n",
-        encoding="utf-8",
-    )
+    _write_json(provenance_path, provenance)
 
 
 def docker_build_command(config: DockerBuildConfig, target: str) -> list[str | Path]:
