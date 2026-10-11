@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -15857,6 +15858,30 @@ class PositiveIntTests(unittest.TestCase):
     def test_accepts_custom_error_message(self):
         with self.assertRaisesRegex(argparse.ArgumentTypeError, "^must be at least 1$"):
             common.positive_int("0", message="must be at least 1")
+
+
+class DoctorBuildProbeTests(unittest.TestCase):
+    def test_build_probe_reports_missing_rustc(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with (
+                patch.object(
+                    doctor, "probe_path", return_value=Path(temporary) / "probe"
+                ),
+                patch.object(
+                    doctor,
+                    "require_tool",
+                    side_effect=common.ScriptError(
+                        "rustc is required to build the host time probe"
+                    ),
+                ) as require_tool,
+                self.assertRaisesRegex(
+                    common.ScriptError, "rustc is required to build the host time probe"
+                ),
+            ):
+                doctor.build_probe(Path(temporary))
+            require_tool.assert_called_once_with(
+                "rustc", "rustc is required to build the host time probe"
+            )
 
 
 class PositiveFloatTests(unittest.TestCase):
