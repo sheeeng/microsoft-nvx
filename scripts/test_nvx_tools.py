@@ -802,6 +802,18 @@ class CliTests(unittest.TestCase):
             ):
                 build.build_docker_artifacts(config, "azurelinux")
 
+    def test_docker_source_artifact_keeps_singular_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                r"Docker build did not produce source\.tar\.gz",
+            ):
+                build._require_docker_artifacts(
+                    Path(temporary),
+                    ("source.tar.gz",),
+                    singular_message=True,
+                )
+
     def test_ubuntu_run_selects_artifact_and_default_memory(self):
         args = nvx.parse_args(["run", "--guest", "ubuntu", "--dry-run"])
 

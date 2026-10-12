@@ -1262,9 +1262,16 @@ def _docker_destination(destination: Path) -> Path:
     return destination.resolve()
 
 
-def _require_docker_artifacts(destination: Path, expected: tuple[str, ...]) -> None:
+def _require_docker_artifacts(
+    destination: Path,
+    expected: tuple[str, ...],
+    *,
+    singular_message: bool = False,
+) -> None:
     missing = [name for name in expected if not (destination / name).is_file()]
     if missing:
+        if singular_message and len(missing) == 1:
+            raise ScriptError(f"Docker build did not produce {missing[0]}")
         raise ScriptError(f"Docker build did not produce: {', '.join(missing)}")
 
 
@@ -1281,8 +1288,11 @@ def build_docker_linux_source(config: DockerBuildConfig) -> Path:
         cwd=BuildConstants.REPO_ROOT,
     )
     archive = destination / KernelBuildConstants.SOURCE_ARCHIVE_NAME
-    if not archive.is_file():
-        raise ScriptError(f"Docker build did not produce {archive.name}")
+    _require_docker_artifacts(
+        destination,
+        (archive.name,),
+        singular_message=True,
+    )
     print(f">> built {archive} ({format_size(archive.stat().st_size)})")
     return archive
 
