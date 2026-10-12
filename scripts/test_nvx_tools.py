@@ -7294,6 +7294,15 @@ class BuildTests(unittest.TestCase):
             ):
                 build._assert_shared_status_kernel_config(config)
 
+    def test_kernel_config_read_errors_are_script_errors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / "missing.config"
+
+            with self.assertRaisesRegex(
+                common.ScriptError, "failed to read kernel configuration"
+            ):
+                build._assert_sandbox_kernel_config(config)
+
     def test_checked_in_config_meets_time_abi_kernel_contract(self):
         config = BuildConstants.REPO_ROOT / KernelBuildConstants.INPUT_CONFIG
         build._assert_time_abi_kernel_config(config)
