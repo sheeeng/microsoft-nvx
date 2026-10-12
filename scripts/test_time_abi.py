@@ -2105,6 +2105,19 @@ class DoctorTests(unittest.TestCase):
         self.assertTrue(standalone.passed, standalone.detail)
         self.assertIn("not compared with the backend's rate", standalone.detail)
 
+    def test_host_clocksource_reports_read_errors(self):
+        with (
+            patch.object(
+                Path,
+                "read_text",
+                side_effect=OSError("permission denied"),
+            ),
+            self.assertRaisesRegex(
+                doctor.ScriptError, "cannot read the host clocksource"
+            ),
+        ):
+            doctor.host_clocksource()
+
     def test_host_skew_check_applies_the_bound(self):
         summary = {
             "pairs": "28",
