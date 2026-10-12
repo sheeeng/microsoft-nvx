@@ -75,6 +75,10 @@ def _load_packages(paths: list[Path]) -> tuple[str, str, list[dict[str, object]]
                 f"{path} is a {guest!r} guest package manifest; "
                 "Alpine source collection only supports Alpine manifests"
             )
+        raw_packages = document.get("packages")
+        if not isinstance(raw_packages, list):
+            raise SourceError(f"package manifest {path} must contain a packages array")
+        raw_packages = cast(list[object], raw_packages)
         current_branch = document.get("alpine_branch", AlpineBuildConstants.BRANCH)
         current_architecture = document.get(
             "architecture", AlpineBuildConstants.ARCHITECTURE
@@ -85,7 +89,11 @@ def _load_packages(paths: list[Path]) -> tuple[str, str, list[dict[str, object]]
             raise SourceError("package manifests use different architectures")
         branch = str(current_branch)
         architecture = str(current_architecture)
-        for raw_package in cast(list[object], document["packages"]):
+        for raw_package in raw_packages:
+            if not isinstance(raw_package, dict):
+                raise SourceError(
+                    f"package manifest {path} contains a non-object package record"
+                )
             package = cast(dict[str, object], raw_package)
             key = (str(package["name"]), str(package["version"]))
             packages[key] = package
