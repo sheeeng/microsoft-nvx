@@ -407,9 +407,9 @@ an Ubuntu equivalent in the initial implementation.
 Add guest selection to build and run commands:
 
 ```text
-python scripts/nvx.py build-initramfs --guest {alpine,ubuntu}
-python scripts/nvx.py build-guest --guest {alpine,ubuntu,all}
-python scripts/nvx.py run --guest {alpine,ubuntu}
+python scripts/nvx.py build-initramfs --guest {alpine,ubuntu,azurelinux}
+python scripts/nvx.py build-guest --guest {alpine,ubuntu,azurelinux,all}
+python scripts/nvx.py run --guest {alpine,ubuntu,azurelinux}
 ```
 
 Defaults:
