@@ -85,8 +85,22 @@ def _load_packages(paths: list[Path]) -> tuple[str, str, list[dict[str, object]]
             raise SourceError("package manifests use different architectures")
         branch = str(current_branch)
         architecture = str(current_architecture)
-        for raw_package in cast(list[object], document["packages"]):
+        raw_packages = document.get("packages")
+        if not isinstance(raw_packages, list) or not raw_packages:
+            raise SourceError(
+                f"{path} package manifest must contain a nonempty packages array"
+            )
+        for raw_package in cast(list[object], raw_packages):
+            if not isinstance(raw_package, dict):
+                raise SourceError(
+                    f"{path} package manifest contains a non-object package record"
+                )
             package = cast(dict[str, object], raw_package)
+            for field in ("name", "version"):
+                if not isinstance(package.get(field), str) or not package[field]:
+                    raise SourceError(
+                        f"{path} package manifest record has no valid {field}"
+                    )
             key = (str(package["name"]), str(package["version"]))
             packages[key] = package
     if not packages:
