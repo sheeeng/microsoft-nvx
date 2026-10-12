@@ -1809,6 +1809,25 @@ class DoctorTests(unittest.TestCase):
             ):
                 self.assertIsNone(doctor.host_cpu_signature())
 
+    def test_host_cpu_reports_windows_registry_errors(self):
+        with (
+            patch.object(doctor, "host_is_windows", return_value=True),
+            patch.object(
+                doctor.platform,
+                "processor",
+                return_value="Intel64 Family 6 Model 154 Stepping 3, GenuineIntel",
+            ),
+            patch.object(
+                doctor,
+                "_windows_registry_value",
+                side_effect=OSError("registry unavailable"),
+            ),
+        ):
+            with self.assertRaisesRegex(
+                doctor.ScriptError, "cannot read the Windows CPU registry data"
+            ):
+                doctor.host_cpu(doctor_context(self.root, "whp"))
+
     def test_preflight_parses_openvmm_verification(self):
         # The line format of OpenVMM's openvmm_entry verify.rs.
         line = (

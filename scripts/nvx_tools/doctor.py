@@ -287,21 +287,29 @@ def host_cpu(context: DoctorContext) -> dict[str, str]:
             raise ScriptError(f"cannot parse the processor {platform.processor()!r}")
         family, model, stepping, vendor = match.groups()
         processor_key = r"HARDWARE\DESCRIPTION\System\CentralProcessor\0"
-        info = {
-            "vendor": vendor,
-            "family": family,
-            "model": model,
-            "stepping": stepping,
-            "brand": str(
-                _windows_registry_value(processor_key, "ProcessorNameString")
-            ).strip(),
-        }
-        revision = _windows_registry_value(processor_key, "Update Revision")
+        try:
+            info = {
+                "vendor": vendor,
+                "family": family,
+                "model": model,
+                "stepping": stepping,
+                "brand": str(
+                    _windows_registry_value(processor_key, "ProcessorNameString")
+                ).strip(),
+            }
+            revision = _windows_registry_value(processor_key, "Update Revision")
+        except OSError as error:
+            raise ScriptError("cannot read the Windows CPU registry data") from error
         if isinstance(revision, bytes) and len(revision) in (4, 8):
             info["microcode"] = hex(int.from_bytes(revision[-4:], "little"))
-        build = _windows_registry_value(
-            r"SOFTWARE\Microsoft\Windows NT\CurrentVersion", "UBR"
-        )
+        try:
+            build = _windows_registry_value(
+                r"SOFTWARE\Microsoft\Windows NT\CurrentVersion", "UBR"
+            )
+        except OSError as error:
+            raise ScriptError(
+                "cannot read the Windows version registry data"
+            ) from error
         info["os"] = f"Windows {platform.version()}.{build}"
         try:
             probed = _probe_record(run_probe(context, "cpu"), "cpu")
