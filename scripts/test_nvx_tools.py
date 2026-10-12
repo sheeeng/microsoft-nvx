@@ -6143,6 +6143,14 @@ class BuildTests(unittest.TestCase):
                 with self.assertRaisesRegex(common.ScriptError, message):
                     azurelinux.load_package_lock(path)
 
+    def test_azurelinux_package_lock_digest_reports_unreadable_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "missing-packages.lock.json"
+            with self.assertRaisesRegex(
+                common.ScriptError, "failed to read Azure Linux package lock"
+            ):
+                azurelinux.package_lock_sha256(path)
+
     def test_azurelinux_download_packages_verifies_each_locked_rpm(self):
         destination = Path("rpms")
         with patch.object(azurelinux, "download_verified") as download_verified:
