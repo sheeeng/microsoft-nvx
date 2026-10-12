@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    create_linux_source_archive,
     guests,
     release,
     sandbox,
@@ -5343,6 +5344,27 @@ class AlpineSourceCollectionTests(unittest.TestCase):
             script.index("trap restore_owner EXIT"),
             script.index("mkdir -p /bundle/upstream"),
         )
+
+
+class CreateLinuxSourceArchiveTests(unittest.TestCase):
+    def test_missing_generated_config_keeps_file_not_found_contract(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / "generated.config"
+            args = argparse.Namespace(config=config, output=Path(temporary) / "out")
+            with (
+                patch.object(
+                    create_linux_source_archive,
+                    "prepare_kernel_source",
+                    return_value=(Path("source"), None),
+                ),
+                self.assertRaises(FileNotFoundError) as raised,
+            ):
+                create_linux_source_archive.command_create_linux_source_archive(args)
+
+            self.assertEqual(
+                str(raised.exception),
+                f"generated kernel config not found: {config}",
+            )
 
 
 class BuildTests(unittest.TestCase):
