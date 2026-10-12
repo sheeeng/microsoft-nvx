@@ -14476,6 +14476,22 @@ class ReleaseTests(unittest.TestCase):
             ):
                 release._validate_alpine_sources([])
 
+    def test_json_manifest_validation_rejects_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source_dir = Path(temporary)
+            alpine_dir = source_dir / "alpine"
+            alpine_dir.mkdir()
+            (alpine_dir / "manifest.json").write_bytes(b"\xff")
+
+            with (
+                patch.object(BuildConstants, "SOURCE_DIR", source_dir),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "invalid collected Alpine source manifest",
+                ),
+            ):
+                release._validate_alpine_sources([])
+
     def test_alpine_source_validation_checks_recorded_executables(self):
         with tempfile.TemporaryDirectory() as temporary:
             source_dir = Path(temporary)
