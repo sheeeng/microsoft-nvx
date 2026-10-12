@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -15836,6 +15837,29 @@ class ReleaseTests(unittest.TestCase):
                     self.assertFalse(destination.exists())
                 else:
                     self.assertEqual(destination.read_bytes(), name.encode("ascii"))
+
+
+class DoctorProbeTests(unittest.TestCase):
+    def test_invalid_output_is_reported_as_script_error(self):
+        context = doctor.DoctorContext(
+            backend="kvm",
+            openvmm=Path("openvmm"),
+            kernel=Path("vmlinux"),
+            initrd=Path("initramfs"),
+            openvmm_args=(),
+            probe_directory=Path("build"),
+            timeout=1.0,
+            probe=Path("probe"),
+        )
+        decode_error = UnicodeDecodeError("utf-8", b"\xff", 0, 1, "invalid")
+        with (
+            patch.object(doctor.subprocess, "run", side_effect=decode_error),
+            self.assertRaisesRegex(
+                common.ScriptError,
+                "host time probe cpu produced invalid UTF-8 output",
+            ),
+        ):
+            doctor.run_probe(context, "cpu")
 
 
 class PositiveIntTests(unittest.TestCase):
