@@ -4489,8 +4489,10 @@ def write_benchmark_metadata(
     if device_io and path.is_file():
         try:
             existing = json.loads(path.read_text(encoding="utf-8"))
-        except (UnicodeError, json.JSONDecodeError) as error:
-            raise ValueError(f"invalid resumable benchmark metadata {path}") from error
+        except (OSError, UnicodeError, json.JSONDecodeError) as error:
+            raise ValueError(
+                f"cannot read resumable benchmark metadata {path}: {error}"
+            ) from error
         if existing != document:
             raise ValueError(
                 f"device-io resume controls or provenance do not match {path}"

@@ -7244,6 +7244,54 @@ class BuildTests(unittest.TestCase):
                 common.sha256_file(source),
             )
 
+    def test_device_io_metadata_read_errors_are_contextual(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output_dir = Path(temporary)
+            metadata_path = output_dir / benchmark.BENCHMARK_METADATA_FILENAME
+            metadata_path.write_text("existing", encoding="utf-8")
+            args = nvx.parse_args(
+                [
+                    "benchmark",
+                    "--suite",
+                    "device-io",
+                    "--backend",
+                    "kvm",
+                    "--nvx-dir",
+                    str(output_dir),
+                ]
+            )
+            with (
+                patch.object(
+                    benchmark,
+                    "_device_io_helper_provenance",
+                    return_value={
+                        "source": "source",
+                        "source_sha256": "1" * 64,
+                        "binary_sha256": "2" * 64,
+                    },
+                ),
+                patch.object(benchmark, "_git_revision", return_value="revision"),
+                patch.object(benchmark, "_git_status", return_value=[]),
+                patch.object(benchmark, "sha256_file", return_value="hash"),
+                patch.object(
+                    Path,
+                    "read_text",
+                    side_effect=OSError("permission denied"),
+                ),
+            ):
+                with self.assertRaisesRegex(
+                    ValueError,
+                    "cannot read resumable benchmark metadata.*permission denied",
+                ):
+                    benchmark.write_benchmark_metadata(
+                        args,
+                        output_dir,
+                        Path("openvmm"),
+                        Path("vmlinux"),
+                        Path("initramfs"),
+                        "kvm",
+                    )
+
     def test_sandbox_kernel_config_requires_every_feature(self):
         with tempfile.TemporaryDirectory() as temporary:
             config = Path(temporary) / ".config"
