@@ -11368,6 +11368,14 @@ class BenchmarkTests(unittest.TestCase):
                 f"benchmark artifact not found: {resolved_missing}",
             )
 
+    def test_missing_benchmark_script_is_a_script_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            with patch.object(benchmark, "BENCHMARK_SCRIPTS_DIR", Path(temporary)):
+                with self.assertRaisesRegex(
+                    common.ScriptError, "cannot read benchmark script"
+                ):
+                    benchmark._read_benchmark_script("missing.sh")
+
     def test_snapshot_profile_records_are_parsed_and_summarized(self):
         record = benchmark.parse_snapshot_profile_line(
             b"OPENVMM_SNAPSHOT_PROFILE_V1 operation=restore "

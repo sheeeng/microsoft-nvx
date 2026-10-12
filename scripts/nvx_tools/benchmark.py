@@ -564,7 +564,11 @@ def run_checked(command: Sequence[str], *, cwd: Path | None = None) -> None:
 
 
 def _read_benchmark_script(name: str) -> str:
-    script = (BENCHMARK_SCRIPTS_DIR / name).read_text(encoding="utf-8")
+    path = BENCHMARK_SCRIPTS_DIR / name
+    try:
+        script = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        raise common.ScriptError(f"cannot read benchmark script {path}") from error
     return script if script.endswith("\n") else script + "\n"
 
 
