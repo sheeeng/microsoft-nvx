@@ -49,7 +49,7 @@ python3 scripts/nvx.py build-initramfs --guest alpine
 python3 scripts/nvx.py build-initramfs --guest ubuntu
 ```
 
-Build the Azure Linux initramfs through Docker:
+Azure Linux does not support `--native`; build its initramfs through Docker:
 
 ```bash
 python3 scripts/nvx.py build-initramfs --guest azurelinux
