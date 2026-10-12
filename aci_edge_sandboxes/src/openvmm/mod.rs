@@ -658,7 +658,7 @@ impl Backend for OpenVmmBackend {
             return Err(self.reject_guest(sandbox_id, &runtime, &missing));
         }
         let mut metadata = Metadata::new();
-        let boot_ms = u64::try_from(started.elapsed().as_millis()).unwrap_or(u64::MAX);
+        let boot_ms = duration_millis(started.elapsed());
         metadata.insert("bootMilliseconds".to_owned(), boot_ms.into());
         Ok(StartResult {
             metadata: Some(metadata),
