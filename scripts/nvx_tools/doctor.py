@@ -309,7 +309,10 @@ def host_cpu(context: DoctorContext) -> dict[str, str]:
         except (ScriptError, KeyError, subprocess.TimeoutExpired) as error:
             info["invariant_tsc"] = f"unknown ({error})"
         return info
-    cpuinfo = _linux_cpuinfo()
+    try:
+        cpuinfo = _linux_cpuinfo()
+    except OSError as error:
+        raise ScriptError(f"cannot read Linux CPU information: {error}") from error
     flags = cpuinfo.get("flags", "").split()
     missing = [flag for flag in LINUX_INVARIANT_TSC_FLAGS if flag not in flags]
     return {

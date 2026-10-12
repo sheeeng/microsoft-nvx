@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -4550,6 +4551,29 @@ python3() {
                         json.loads(accepted.read_text(encoding="utf-8")),
                         {"attempt": len(statuses)},
                     )
+
+
+class DoctorTests(unittest.TestCase):
+    def test_linux_cpu_information_read_failure_is_script_error(self):
+        context = doctor.DoctorContext(
+            "kvm",
+            Path("openvmm"),
+            Path("vmlinux"),
+            Path("initramfs"),
+            (),
+            Path("."),
+            1.0,
+        )
+        with patch.object(
+            doctor,
+            "_linux_cpuinfo",
+            side_effect=OSError("cpuinfo unavailable"),
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                "cannot read Linux CPU information: cpuinfo unavailable",
+            ):
+                doctor.host_cpu(context)
 
 
 class BuildConstantsTests(unittest.TestCase):
