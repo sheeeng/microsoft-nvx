@@ -1,11 +1,11 @@
 # Continuous integration
 
 The GitHub Actions workflow has two microVM test layers on Azure-hosted
-self-hosted KVM, MSHV, and WHP virtual machines. Each backend has a pool of
-three runners labeled by operating system, backend, and `virtual-machine`.
-Jobs target the shared backend labels so any available matching runner can
-execute them. This allows the backend lanes to execute concurrently without
-binding a workload to a specific host. `openvmm-vmm-tests` downloads the NVX
+self-hosted KVM, MSHV, and WHP virtual machines. Each backend has a shared
+runner label composed of its operating system, backend, and
+`virtual-machine`. Jobs target those labels so any available matching runner
+can execute them. This allows the backend lanes to execute concurrently
+without binding a workload to a specific host. `openvmm-vmm-tests` downloads the NVX
 guest artifacts and uses the Linux-direct kernel and Alpine initramfs to
 exercise OpenVMM's Linux MP-table lifecycle, TTRPC, and snapshot contracts.
 `openvmm-unit-tests` runs the OpenVMM unit and documentation tests independently
