@@ -11,7 +11,7 @@ import ssl
 import subprocess
 import sys
 from pathlib import Path
-from typing import TypedDict
+from typing import Any, TypedDict
 
 from . import ubuntu
 from .build_config import (
@@ -684,13 +684,27 @@ def _pack_initramfs(root: Path, output: Path) -> None:
     _normalize_initramfs_metadata(root)
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open("wb") as archive:
-        finder = subprocess.Popen(
-            ["find", ".", "-print0"], cwd=root, stdout=subprocess.PIPE
-        )
+        processes: list[subprocess.Popen[Any]] = []
+
+        def spawn(command: list[str], **kwargs: Any) -> subprocess.Popen[Any]:
+            try:
+                process = subprocess.Popen(command, **kwargs)
+            except BaseException:
+                for process in reversed(processes):
+                    if process.stdout is not None:
+                        process.stdout.close()
+                    if process.poll() is None:
+                        process.kill()
+                    process.wait()
+                raise
+            processes.append(process)
+            return process
+
+        finder = spawn(["find", ".", "-print0"], cwd=root, stdout=subprocess.PIPE)
         assert finder.stdout is not None
         sort_environment = os.environ.copy()
         sort_environment["LC_ALL"] = "C"
-        sorter = subprocess.Popen(
+        sorter = spawn(
             ["sort", "-z"],
             cwd=root,
             stdin=finder.stdout,
@@ -699,7 +713,7 @@ def _pack_initramfs(root: Path, output: Path) -> None:
         )
         finder.stdout.close()
         assert sorter.stdout is not None
-        cpio = subprocess.Popen(
+        cpio = spawn(
             [
                 "cpio",
                 "--null",
@@ -716,7 +730,7 @@ def _pack_initramfs(root: Path, output: Path) -> None:
         )
         sorter.stdout.close()
         assert cpio.stdout is not None
-        gzip = subprocess.Popen(
+        gzip = spawn(
             ["gzip", "-n", f"-{InitramfsBuildConstants.GZIP_COMPRESSION_LEVEL}"],
             stdin=cpio.stdout,
             stdout=archive,
