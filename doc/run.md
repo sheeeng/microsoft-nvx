@@ -232,7 +232,11 @@ guest-to-host mapping without publishing guest ports. Guest-originated traffic
 remains subject to egress policy.
 
 Most `nvx.py run` options pass through unchanged: `--machine`, `--processors`,
-`--cpu-profile`, `--mount`, `--net`, `--network-profile`, `--cmdline`,
+`--cpu-profile`, `--mount`, `--mount-deny`, `--mount-owner`, `--net`,
+`--network-profile`, `--network-egress`, `--network-ingress`,
+`--network-egress-allow`, `--network-egress-deny`,
+`--network-egress-policy-file`, `--host-loopback`, `--network-proxy`,
+`--host-loopback-forward`, `--outcome-report`, `--cmdline`,
 `--restore-snapshot`, `--restore-processors`, and `--restore-ready-path`. The
 wrapper performs these translations and additions:
 
