@@ -6221,6 +6221,15 @@ class BuildTests(unittest.TestCase):
             ):
                 ubuntu.load_package_lock(path)
 
+    def test_ubuntu_identity_read_errors_are_actionable(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+
+            with self.assertRaisesRegex(
+                common.ScriptError, "failed to read Ubuntu Base identity"
+            ):
+                ubuntu._validate_ubuntu_identity(root)
+
     def test_ubuntu_safe_extractor_rejects_archive_symlink_escape(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
