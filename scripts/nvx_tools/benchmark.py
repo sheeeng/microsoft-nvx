@@ -41,7 +41,7 @@ from .build_constants import (
     KernelBuildConstants,
     OpenVMMBuildConstants,
 )
-from .common import bytes_to_mib, sha256_file
+from .common import bytes_to_mib, remaining_timeout, sha256_file
 from .time_abi import TimeAbiFailure, TimeAbiMonitor, status_script
 
 BOOT_MARKER = b"ALPINE-MICROVM-BOOT-OK"
@@ -1266,7 +1266,7 @@ def drain_exited_output(
     deadline = time.monotonic() + timeout
     while not output.closed:
         try:
-            stream, chunk = output.get(timeout=max(0.0, deadline - time.monotonic()))
+            stream, chunk = output.get(timeout=remaining_timeout(deadline))
         except queue.Empty:
             return
         if stream != "console":
