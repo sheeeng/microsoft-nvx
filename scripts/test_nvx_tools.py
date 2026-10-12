@@ -14460,6 +14460,22 @@ AUTHORIZATION_VALUE = "Bearer placeholder-value"
 
 
 class ReleaseTests(unittest.TestCase):
+    def test_ubuntu_source_validation_rejects_non_object_manifest(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            source_dir = Path(temporary)
+            ubuntu_dir = source_dir / "ubuntu"
+            ubuntu_dir.mkdir()
+            (ubuntu_dir / "manifest.json").write_text("[]", encoding="utf-8")
+
+            with (
+                patch.object(BuildConstants, "SOURCE_DIR", source_dir),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "invalid collected Ubuntu source manifest: expected a JSON object",
+                ),
+            ):
+                release._validate_ubuntu_sources([])
+
     def test_alpine_source_validation_rejects_malformed_manifest(self):
         with tempfile.TemporaryDirectory() as temporary:
             source_dir = Path(temporary)
