@@ -1690,6 +1690,16 @@ class PerformanceTests(unittest.TestCase):
             self.assertEqual(result.microvm_abi_version, 1)
             self.assertEqual(result.processors, 1)
 
+    def test_rejects_unreadable_results_file(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "linux-kvm-baremetal.csv"
+            path.mkdir()
+
+            with self.assertRaisesRegex(
+                performance.PerformanceError, "cannot read results file"
+            ):
+                performance.read_results(path)
+
     def test_collects_dimensioned_microvm_v2_results(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
