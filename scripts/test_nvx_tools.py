@@ -4834,6 +4834,19 @@ class UbuntuSourceCollectionTests(unittest.TestCase):
 
         self.assertIn("cannot read Ubuntu package manifest", str(context.exception))
 
+    def test_unreadable_launchpad_response_is_reported_as_script_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            response = Path(temporary) / "response.json"
+            with patch.object(collect_ubuntu_sources, "download"):
+                with self.assertRaisesRegex(
+                    collect_ubuntu_sources.ScriptError,
+                    "invalid Launchpad response",
+                ):
+                    collect_ubuntu_sources._download_json(
+                        "https://launchpad.invalid/response",
+                        response,
+                    )
+
 
 class AlpineSourceCollectionTests(unittest.TestCase):
     INSTALL_SCRIPT = b"#!/bin/sh\nexit 0\n"
