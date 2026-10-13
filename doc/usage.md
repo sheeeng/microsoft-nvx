@@ -640,7 +640,7 @@ python3 scripts/nvx.py benchmark [OPTIONS]
 | --- | --- | --- |
 | `--suite {boot,snapshot,restore,e2e,phase2,snapshot-profile,all,cold-start,device-io,device-restore-profile,network-snapshot,performance,shell-snapshot,shell-snapshot-restore,snapshot-restore-memory,snapshot-restore-vcpu,virtfs}` | `boot` | Select an acceptance, diagnostic, or workload suite. |
 | `--backend {whp,kvm,mshv,both}` | `both` on Windows; `kvm` elsewhere | Select the hypervisor backend. |
-| `--platform NAME` | inferred OS/backend | Record the host-typed performance series. |
+| `--platform NAME` | `<os>-<backend>` (`linux-kvm` on Linux by default) | Override the platform recorded for benchmark results; host-typed performance series names such as `linux-kvm-baremetal` must be supplied explicitly. |
 | `--openvmm-dir PATH` | `openvmm/` | Select the OpenVMM repository. |
 | `--nvx-dir PATH` | repository root | Select the NVX repository containing guest artifacts. |
 | `--warmups N` | `5` for `device-io`; `1` for `device-restore-profile`; `3` otherwise | Set the number of excluded warmup attempts; zero is allowed. |
