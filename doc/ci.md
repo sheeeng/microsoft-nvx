@@ -18,7 +18,7 @@ does not replace the failed attempt's diagnostics. Linux collects them from
 `openvmm/target/vmm_tests/test_results`; Windows uses
 `<runner-temp>/<backend>/test_results`.
 The `nvx-microvm-tests-{kvm,mshv,whp}` jobs consume the NVX Linux kernel and
-the NVX Linux kernel plus the selected Alpine or Ubuntu initramfs and exercises
+the selected Alpine, Ubuntu, or Azure Linux initramfs and exercise
 Linux, SMP, virtio, sandbox, and snapshot behavior through the public OpenVMM
 CLI. Alpine-control-only scenarios remain explicit and are rejected for the
 Ubuntu initramfs. Each job also boots the Azure Linux initramfs through its
