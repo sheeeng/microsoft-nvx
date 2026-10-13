@@ -4930,7 +4930,7 @@ class AlpineSourceCollectionTests(unittest.TestCase):
 
     def test_malformed_package_manifest_is_reported_as_source_error(self):
         with tempfile.TemporaryDirectory() as temporary:
-            for contents in ("{", "[]"):
+            for contents in ("{", "[]", "{}"):
                 manifest = Path(temporary) / "packages.json"
                 manifest.write_text(contents, encoding="utf-8")
 
