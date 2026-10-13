@@ -9417,6 +9417,14 @@ class AciSandboxRunnerTests(unittest.TestCase):
         self.assertIn(f"kept {state_root}", stderr)
         self.assertIn(f"{sandbox} (OpenVMM pid 4242)", stderr)
 
+    def test_handler_ignores_invalid_recorded_process_ids(self):
+        for invalid_pid in (True, False, 0, -1):
+            with self.subTest(invalid_pid=invalid_pid):
+                _, stderr = self._run_leaving({"runtime.json": {"pid": invalid_pid}})
+
+            self.assertIn("no recorded OpenVMM process", stderr)
+            self.assertNotIn("OpenVMM pid", stderr)
+
     def test_handler_keeps_state_when_the_test_is_interrupted(self):
         state_root, stderr = self._run_leaving(
             {"launch.json": {"process": {"pid": 77}}}, interrupt=True
