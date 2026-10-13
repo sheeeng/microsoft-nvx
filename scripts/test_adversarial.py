@@ -2017,6 +2017,10 @@ class AdversarialCampaignTests(unittest.TestCase):
             with self.assertRaisesRegex(ScriptError, "budgets do not match"):
                 _validate_replay_manifest(replay, config=config, cases=cases)
             _write_replay_manifest(replay, config)
+            manifest_path.write_bytes(b"\xff")
+            with self.assertRaisesRegex(ScriptError, "cannot read replay manifest"):
+                _validate_replay_manifest(replay, config=config, cases=cases)
+            _write_replay_manifest(replay, config)
             replay.write_text("{}\n", encoding="utf-8")
             with self.assertRaisesRegex(ScriptError, "do not match"):
                 _validate_replay_manifest(replay, config=config, cases=cases)

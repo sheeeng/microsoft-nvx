@@ -1355,7 +1355,7 @@ def _validate_replay_manifest(
             manifest_path.read_text(encoding="utf-8"),
             description="replay manifest",
         )
-    except OSError as error:
+    except (OSError, UnicodeDecodeError) as error:
         raise ScriptError(
             f"cannot read replay manifest {manifest_path}: {error}"
         ) from error
