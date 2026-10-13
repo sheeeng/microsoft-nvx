@@ -377,7 +377,13 @@ def capture_snapshot(
 
 
 def _read_script(name: str) -> str:
-    script = (MICROVM_TEST_SCRIPTS_DIR / name).read_text(encoding="utf-8")
+    path = MICROVM_TEST_SCRIPTS_DIR / name
+    try:
+        script = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        raise RuntimeError(
+            f"cannot read microVM test script {path}: {error}"
+        ) from error
     if not script.endswith("\n"):
         raise ValueError(f"microVM test script must end with a newline: {name}")
     return script

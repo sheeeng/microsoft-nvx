@@ -185,6 +185,18 @@ def _restore_processors_measure(
 
 
 class MicrovmTestParserTests(unittest.TestCase):
+    def test_read_script_reports_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            script_path = Path(temporary) / "invalid.sh"
+            script_path.write_bytes(b"\xff")
+            with patch.object(
+                microvm_tests, "MICROVM_TEST_SCRIPTS_DIR", Path(temporary)
+            ):
+                with self.assertRaisesRegex(
+                    RuntimeError, r"cannot read microVM test script .*invalid\.sh"
+                ):
+                    microvm_tests._read_script("invalid.sh")
+
     def test_parser_defaults_to_all_correctness_scenarios(self):
         args = nvx.parse_args(["test-microvm", "--backend", "mshv"])
 
