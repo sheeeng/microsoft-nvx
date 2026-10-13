@@ -147,10 +147,7 @@ Linux uses Docker. Alpine is the default.
 ### `build-distro-layer`
 
 ```text
-python3 scripts/nvx.py build-distro-layer
-    --guest ubuntu
-    [--output PATH]
-    [--replace]
+python3 scripts/nvx.py build-distro-layer --guest ubuntu [--output PATH] [--replace]
 ```
 
 Builds the immutable Ubuntu EROFS `distro` layer directly on Linux. The default
