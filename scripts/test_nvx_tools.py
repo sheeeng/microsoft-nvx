@@ -15159,6 +15159,14 @@ class ReleaseTests(unittest.TestCase):
             binary, build_dir / OpenVMMBuildConstants.PROVENANCE_NAME
         )
 
+    def test_read_json_object_rejects_invalid_utf8(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path = Path(temporary) / "provenance.json"
+            path.write_bytes(b"\xff")
+
+            with self.assertRaisesRegex(common.ScriptError, "invalid provenance"):
+                release._read_json_object(path, "provenance")
+
     def test_package_rejects_dirty_openvmm_provenance(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
