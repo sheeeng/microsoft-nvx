@@ -20,6 +20,7 @@ from unittest.mock import patch
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from nvx_tools import benchmark, doctor, openvmm_process, time_abi  # noqa: E402
+from nvx_tools.common import ScriptError  # noqa: E402
 from nvx_tools.time_abi import TimeAbiFailure, TimeAbiMonitor  # noqa: E402
 
 BOOT_LINE = (
@@ -1767,6 +1768,12 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(fields["vendor_id"], "GenuineIntel")
         self.assertEqual(fields["model"], "85")
         self.assertIn("nonstop_tsc", fields["flags"])
+
+    def test_reports_unreadable_cpuinfo_as_script_error(self):
+        with self.assertRaisesRegex(ScriptError, "cannot read Linux CPU information"):
+            doctor._linux_cpuinfo(  # pyright: ignore[reportPrivateUsage]
+                self.root / "missing-cpuinfo"
+            )
 
     def test_identifies_the_host_cpu_signature(self):
         HostCpu = time_abi.HostCpu

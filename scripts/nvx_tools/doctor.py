@@ -238,7 +238,11 @@ def _probe_record(
 def _linux_cpuinfo(path: Path = CPUINFO_PATH) -> dict[str, str]:
     """Return the first processor's /proc/cpuinfo fields."""
     fields: dict[str, str] = {}
-    for line in path.read_text(encoding="utf-8").splitlines():
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeDecodeError) as error:
+        raise ScriptError(f"cannot read Linux CPU information from {path}") from error
+    for line in lines:
         if not line.strip():
             if fields:
                 break
@@ -275,7 +279,7 @@ def host_cpu_signature() -> HostCpu | None:
             model = cpuinfo["model"]
             stepping = cpuinfo["stepping"]
         return HostCpu(vendor, int(family), int(model), int(stepping))
-    except (OSError, KeyError, ValueError):
+    except (OSError, KeyError, ValueError, ScriptError):
         return None
 
 
