@@ -619,7 +619,7 @@ def _restore_environment() -> dict[str, str]:
     return environment
 
 
-def run_guest_boot(
+def _run_guest_identity_check(
     executable: Path,
     kernel: Path,
     initrd: Path,
@@ -629,6 +629,7 @@ def run_guest_boot(
     memory_mib: int,
     timeout: float,
     log_path: Path,
+    completion_marker: bytes,
 ) -> None:
     command = workload_boot_command(
         executable,
@@ -644,12 +645,36 @@ def run_guest_boot(
             "set -e\n"
             f"grep -Fqx 'ID={descriptor.os_release_id}' /etc/os-release\n"
             f"grep -Fq '{descriptor.release}' /etc/os-release\n"
-            "echo NVX-GUEST-BOOT-CHECK-OK\n"
+            f"echo {completion_marker.decode('ascii')}\n"
             "nvx-exit 0\n"
         ),
-        GUEST_BOOT_COMPLETION_MARKER,
+        completion_marker,
         timeout=timeout,
         log_path=log_path,
+    )
+
+
+def run_guest_boot(
+    executable: Path,
+    kernel: Path,
+    initrd: Path,
+    backend: str,
+    descriptor: GuestDescriptor,
+    *,
+    memory_mib: int,
+    timeout: float,
+    log_path: Path,
+) -> None:
+    _run_guest_identity_check(
+        executable,
+        kernel,
+        initrd,
+        backend,
+        descriptor,
+        memory_mib=memory_mib,
+        timeout=timeout,
+        log_path=log_path,
+        completion_marker=GUEST_BOOT_COMPLETION_MARKER,
     )
 
 
@@ -664,26 +689,16 @@ def run_guest_identity(
     timeout: float,
     log_path: Path,
 ) -> None:
-    command = workload_boot_command(
+    _run_guest_identity_check(
         executable,
-        backend,
         kernel,
         initrd,
-        memory_mib,
-        "quiet loglevel=0",
-    )
-    run_guest_script(
-        command,
-        (
-            "set -e\n"
-            f"grep -Fqx 'ID={descriptor.os_release_id}' /etc/os-release\n"
-            f"grep -Fq '{descriptor.release}' /etc/os-release\n"
-            "echo NVX-GUEST-IDENTITY-OK\n"
-            "nvx-exit 0\n"
-        ),
-        GUEST_IDENTITY_COMPLETION_MARKER,
+        backend,
+        descriptor,
+        memory_mib=memory_mib,
         timeout=timeout,
         log_path=log_path,
+        completion_marker=GUEST_IDENTITY_COMPLETION_MARKER,
     )
 
 
