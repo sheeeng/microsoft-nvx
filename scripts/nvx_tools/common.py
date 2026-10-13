@@ -120,12 +120,17 @@ def run_capture(
     env: Mapping[str, str] | None = None,
 ) -> CommandResult:
     command = tuple(os.fspath(arg) for arg in args)
-    result = subprocess.run(
-        command,
-        cwd=cwd,
-        env=env,
-        capture_output=True,
-    )
+    try:
+        result = subprocess.run(
+            command,
+            cwd=cwd,
+            env=env,
+            capture_output=True,
+        )
+    except OSError as error:
+        raise ScriptError(
+            f"failed to run command {' '.join(command)}: {error}"
+        ) from error
     return CommandResult(command, result.returncode, result.stdout, result.stderr)
 
 
@@ -305,6 +310,10 @@ def run_checked(
             input=input_bytes,
             check=True,
         )
+    except OSError as error:
+        raise ScriptError(
+            f"failed to run command {' '.join(command)}: {error}"
+        ) from error
     except subprocess.CalledProcessError as error:
         raise ScriptError(
             f"command failed with exit {error.returncode}: {' '.join(command)}"

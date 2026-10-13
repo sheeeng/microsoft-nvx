@@ -15889,6 +15889,36 @@ class GitOutputTests(unittest.TestCase):
         )
 
 
+class ProcessHelperTests(unittest.TestCase):
+    def test_run_capture_reports_launch_errors(self):
+        with (
+            patch.object(
+                common.subprocess,
+                "run",
+                side_effect=FileNotFoundError("missing executable"),
+            ),
+            self.assertRaisesRegex(
+                common.ScriptError,
+                r"failed to run command missing-tool: missing executable",
+            ),
+        ):
+            common.run_capture(["missing-tool"])
+
+    def test_run_checked_reports_launch_errors(self):
+        with (
+            patch.object(
+                common.subprocess,
+                "run",
+                side_effect=PermissionError("permission denied"),
+            ),
+            self.assertRaisesRegex(
+                common.ScriptError,
+                r"failed to run command blocked-tool: permission denied",
+            ),
+        ):
+            common.run_checked(["blocked-tool"])
+
+
 class SharedFileTests(unittest.TestCase):
     def test_checksum_manifest_detects_modified_file(self):
         with tempfile.TemporaryDirectory() as temporary:
