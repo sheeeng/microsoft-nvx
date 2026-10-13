@@ -7363,6 +7363,15 @@ class BuildTests(unittest.TestCase):
             with self.assertRaisesRegex(common.ScriptError, "CONFIG_FOO=m"):
                 build._assert_hardening_kernel_config(config)
 
+    def test_kernel_config_read_failures_are_script_errors(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            config = Path(temporary) / ".config"
+            config.write_bytes(b"\xff")
+            with self.assertRaisesRegex(
+                common.ScriptError, r"cannot read kernel configuration .*\.config"
+            ):
+                build._assert_time_abi_kernel_config(config)
+
     def test_watchdog_kernel_config_separates_production_and_debug(self):
         with tempfile.TemporaryDirectory() as temporary:
             config = Path(temporary) / ".config"

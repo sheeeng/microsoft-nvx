@@ -81,10 +81,19 @@ def _run_openvmm_command(
 def _assert_kernel_config(
     path: Path, required: tuple[str, ...], error_prefix: str
 ) -> None:
-    configured = set(path.read_text(encoding="utf-8").splitlines())
+    configured = set(_read_kernel_config(path))
     missing = [setting for setting in required if setting not in configured]
     if missing:
         raise ScriptError(error_prefix + ", ".join(missing))
+
+
+def _read_kernel_config(path: Path) -> list[str]:
+    try:
+        return path.read_text(encoding="utf-8").splitlines()
+    except (OSError, UnicodeError) as error:
+        raise ScriptError(
+            f"cannot read kernel configuration {path}: {error}"
+        ) from error
 
 
 def _assert_direct_boot_kernel_config(path: Path) -> None:
@@ -128,14 +137,20 @@ def _assert_time_abi_kernel_config(path: Path) -> None:
 
 
 def _assert_hardening_kernel_config(path: Path) -> None:
-    _assert_kernel_config(
-        path,
-        KernelBuildConstants.REQUIRED_HARDENING_CONFIG,
-        "kernel configuration does not keep runtime code read-only: ",
-    )
+    configured = _read_kernel_config(path)
+    missing = [
+        setting
+        for setting in KernelBuildConstants.REQUIRED_HARDENING_CONFIG
+        if setting not in configured
+    ]
+    if missing:
+        raise ScriptError(
+            "kernel configuration does not keep runtime code read-only: "
+            + ", ".join(missing)
+        )
     modules = [
         line
-        for line in path.read_text(encoding="utf-8").splitlines()
+        for line in configured
         if line.startswith("CONFIG_") and line.endswith("=m")
     ]
     if modules:
