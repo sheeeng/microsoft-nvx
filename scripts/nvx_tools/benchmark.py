@@ -2600,6 +2600,29 @@ def run_guest_script(
     return result
 
 
+def _start_snapshot_process(
+    command: Sequence[str],
+    windows_cpus: set[int] | None,
+) -> tuple[
+    InteractiveProcess,
+    subprocess.Popen[bytes],
+    TimeAbiMonitor,
+    queue.Queue[bytes | None],
+]:
+    environment = os.environ.copy()
+    environment["OPENVMM_LOG"] = "off"
+    interaction = InteractiveProcess(command, environment)
+    process = interaction.process
+    monitor = TimeAbiMonitor(command)
+    if windows_cpus is not None:
+        set_windows_affinity(process.pid, windows_cpus)
+    chunks: queue.Queue[bytes | None] = queue.Queue()
+    threading.Thread(
+        target=interaction.read_output, args=(chunks,), daemon=True
+    ).start()
+    return interaction, process, monitor, chunks
+
+
 def capture_automatic_snapshot(
     command: Sequence[str],
     snapshot_path: Path,
@@ -2610,18 +2633,9 @@ def capture_automatic_snapshot(
 ) -> None:
     if snapshot_path.exists():
         shutil.rmtree(snapshot_path)
-    environment = os.environ.copy()
-    environment["OPENVMM_LOG"] = "off"
-    interaction = InteractiveProcess(command, environment)
-    process = interaction.process
-    monitor = TimeAbiMonitor(command)
-    if windows_cpus is not None:
-        set_windows_affinity(process.pid, windows_cpus)
-
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
+    interaction, process, monitor, chunks = _start_snapshot_process(
+        command, windows_cpus
+    )
     deadline = time.monotonic() + timeout
     output = bytearray()
     try:
@@ -2698,17 +2712,9 @@ def capture_device_restore_snapshot(
 ) -> list[dict[str, str]]:
     if snapshot_path.exists():
         shutil.rmtree(snapshot_path)
-    environment = os.environ.copy()
-    environment["OPENVMM_LOG"] = "off"
-    interaction = InteractiveProcess(command, environment)
-    process = interaction.process
-    monitor = TimeAbiMonitor(command)
-    if windows_cpus is not None:
-        set_windows_affinity(process.pid, windows_cpus)
-    chunks: queue.Queue[bytes | None] = queue.Queue()
-    threading.Thread(
-        target=interaction.read_output, args=(chunks,), daemon=True
-    ).start()
+    interaction, process, monitor, chunks = _start_snapshot_process(
+        command, windows_cpus
+    )
     deadline = time.monotonic() + timeout
     output = bytearray()
     try:
