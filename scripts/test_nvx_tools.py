@@ -6221,6 +6221,19 @@ class BuildTests(unittest.TestCase):
             ):
                 ubuntu.load_package_lock(path)
 
+    def test_ubuntu_control_metadata_rejects_invalid_utf8(self):
+        archive_data = io.BytesIO()
+        with tarfile.open(fileobj=archive_data, mode="w:") as archive_file:
+            control = tarfile.TarInfo("control")
+            control_data = b"Package: test\nDescription: \xff\n"
+            control.size = len(control_data)
+            archive_file.addfile(control, io.BytesIO(control_data))
+
+        with self.assertRaisesRegex(
+            common.ScriptError, "invalid UTF-8 control metadata"
+        ):
+            ubuntu._control_files(Path("test.deb"), "test", archive_data.getvalue())
+
     def test_ubuntu_safe_extractor_rejects_archive_symlink_escape(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)

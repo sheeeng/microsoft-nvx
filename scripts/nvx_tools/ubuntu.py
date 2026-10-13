@@ -490,7 +490,13 @@ def _control_files(
     control_entry = files.get("control")
     if control_entry is None:
         raise ScriptError(f"{package_path.name} has no control metadata")
-    records = parse_deb822(control_entry[0].decode("utf-8"))
+    try:
+        control_text = control_entry[0].decode("utf-8")
+    except UnicodeDecodeError as error:
+        raise ScriptError(
+            f"{package_path.name} has invalid UTF-8 control metadata"
+        ) from error
+    records = parse_deb822(control_text)
     if len(records) != 1:
         raise ScriptError(f"{package_path.name} has invalid control metadata")
     control = records[0]
