@@ -7244,6 +7244,35 @@ class BuildTests(unittest.TestCase):
                 common.sha256_file(source),
             )
 
+    def test_device_io_provenance_reports_unreadable_manifest(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            source = root / "guest" / "common" / "nvx-device-io.c"
+            source.parent.mkdir(parents=True)
+            source.write_bytes(b"shared helper source")
+            initrd = root / "initramfs.cpio.gz"
+            manifest = initrd.with_name(f"{initrd.name}.packages.json")
+
+            for unreadable in (False, True):
+                with self.subTest(unreadable=unreadable):
+                    manifest.write_bytes(b'{"helpers": {}}')
+                    read_text = (
+                        patch.object(Path, "read_text", side_effect=OSError("denied"))
+                        if unreadable
+                        else contextlib.nullcontext()
+                    )
+                    with (
+                        read_text,
+                        self.assertRaisesRegex(
+                            ValueError, "invalid nvx-device-io provenance"
+                        ),
+                    ):
+                        benchmark._device_io_helper_provenance(
+                            argparse.Namespace(nvx_dir=root),
+                            initrd,
+                        )
+                    manifest.unlink()
+
     def test_sandbox_kernel_config_requires_every_feature(self):
         with tempfile.TemporaryDirectory() as temporary:
             config = Path(temporary) / ".config"
