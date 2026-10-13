@@ -15958,6 +15958,23 @@ class SharedFileTests(unittest.TestCase):
             with self.assertRaisesRegex(common.ScriptError, "only ASCII text"):
                 common.verify_sha256_sums(root)
 
+    def test_checksum_manifest_reports_read_error(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            checksum_file = root / "SHA256SUMS"
+            checksum_file.write_bytes(b"")
+
+            with patch.object(
+                Path,
+                "read_bytes",
+                side_effect=OSError("checksum I/O failure"),
+            ):
+                with self.assertRaisesRegex(
+                    common.ScriptError,
+                    r"failed to read source checksums: .*SHA256SUMS",
+                ):
+                    common.verify_sha256_sums(root)
+
     def test_checksum_manifest_rejects_unsafe_paths_and_symlinks(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
