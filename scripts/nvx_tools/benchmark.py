@@ -41,7 +41,7 @@ from .build_constants import (
     KernelBuildConstants,
     OpenVMMBuildConstants,
 )
-from .common import bytes_to_mib, sha256_file
+from .common import ScriptError, bytes_to_mib, sha256_file
 from .time_abi import TimeAbiFailure, TimeAbiMonitor, status_script
 
 BOOT_MARKER = b"ALPINE-MICROVM-BOOT-OK"
@@ -564,7 +564,11 @@ def run_checked(command: Sequence[str], *, cwd: Path | None = None) -> None:
 
 
 def _read_benchmark_script(name: str) -> str:
-    script = (BENCHMARK_SCRIPTS_DIR / name).read_text(encoding="utf-8")
+    path = BENCHMARK_SCRIPTS_DIR / name
+    try:
+        script = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeError) as error:
+        raise ScriptError(f"cannot read benchmark script {path}") from error
     return script if script.endswith("\n") else script + "\n"
 
 
