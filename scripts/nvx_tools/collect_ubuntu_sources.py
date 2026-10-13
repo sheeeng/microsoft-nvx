@@ -404,10 +404,11 @@ def _clearsigned_payload(text: str, label: str) -> str:
 
 def _dsc_document(path: Path) -> dict[str, str]:
     # The signed Release -> Sources.xz -> .dsc digest chain authenticates this file.
-    payload = _clearsigned_payload(
-        path.read_text(encoding="utf-8"),
-        path.name,
-    )
+    try:
+        text = path.read_text(encoding="utf-8")
+    except (OSError, UnicodeDecodeError) as error:
+        raise ScriptError(f"cannot read Debian source metadata {path}") from error
+    payload = _clearsigned_payload(text, path.name)
     documents = parse_deb822(payload)
     if len(documents) != 1:
         raise ScriptError(f"{path} has invalid Debian source metadata")
