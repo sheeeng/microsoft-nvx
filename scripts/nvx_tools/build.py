@@ -542,7 +542,15 @@ def prepare_kernel_source(config: KernelBuildConfig) -> tuple[Path, str]:
     source_parent.mkdir(parents=True, exist_ok=True)
     download_verified(KernelBuildConstants.URL, tarball, KernelBuildConstants.SHA256)
 
-    cached_fingerprint = stamp.read_text(encoding="utf-8") if stamp.is_file() else None
+    if stamp.is_file():
+        try:
+            cached_fingerprint = stamp.read_text(encoding="utf-8")
+        except (OSError, UnicodeDecodeError) as error:
+            raise ScriptError(
+                f"cannot read cached Linux source fingerprint {stamp}: {error}"
+            ) from error
+    else:
+        cached_fingerprint = None
     if source.is_dir() and cached_fingerprint != fingerprint:
         shutil.rmtree(source)
     if not source.is_dir():

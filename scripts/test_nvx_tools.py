@@ -5904,6 +5904,30 @@ class BuildTests(unittest.TestCase):
             self.assertFalse(output.with_name("vmlinux.config").exists())
             self.assertFalse(prior_provenance.exists())
 
+    def test_prepare_kernel_source_rejects_unreadable_cache_fingerprint(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            cache = root / "cache"
+            source_parent = cache / KernelBuildConstants.SOURCE_DIRECTORY_NAME
+            source = source_parent / KernelBuildConstants.SOURCE_NAME
+            source.mkdir(parents=True)
+            stamp = source_parent / KernelBuildConstants.SOURCE_STAMP_NAME
+            stamp.write_bytes(b"\xff")
+            config = build_config.KernelBuildConfig(cache_directory=cache)
+
+            with (
+                patch.object(build, "require_tool"),
+                patch.object(build, "download_verified"),
+                patch.object(
+                    build, "_kernel_source_fingerprint", return_value="current"
+                ),
+                self.assertRaisesRegex(
+                    common.ScriptError,
+                    "cannot read cached Linux source fingerprint",
+                ),
+            ):
+                build.prepare_kernel_source(config)
+
     def test_materialize_kernel_provenance_inputs_bypasses_mutable_index(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary)
