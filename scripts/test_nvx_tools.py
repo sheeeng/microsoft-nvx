@@ -47,6 +47,7 @@ from nvx_tools import (  # noqa: E402
     collect_alpine_sources,
     collect_ubuntu_sources,
     common,
+    doctor,
     guests,
     release,
     sandbox,
@@ -2056,6 +2057,17 @@ class CliTests(unittest.TestCase):
     def test_record_openvmm_provenance_command_is_exposed(self):
         args = nvx.parse_args(["record-openvmm-provenance"])
         self.assertIs(args.handler, nvx.command_record_openvmm_provenance)
+
+
+class DoctorTests(unittest.TestCase):
+    def test_host_clocksource_reports_read_failure(self):
+        missing = Path("missing-clocksource")
+        with patch.object(doctor, "CLOCKSOURCE_PATH", missing):
+            with self.assertRaisesRegex(
+                common.ScriptError,
+                r"cannot read host clocksource missing-clocksource",
+            ):
+                doctor.host_clocksource()
 
 
 class CiTests(unittest.TestCase):
