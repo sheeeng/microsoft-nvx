@@ -297,7 +297,10 @@ def _deserialize_launch(config: dict[str, Any]) -> SandboxLaunch:
         raise ScriptError("sandbox configuration is malformed") from error
     if config.get("format") != _config_format(launch.mounts):
         raise ScriptError("sandbox configuration format does not match its mounts")
-    return launch.validated()
+    try:
+        return launch.validated()
+    except OSError as error:
+        raise ScriptError("sandbox configuration is malformed") from error
 
 
 def _linux_start_time(stat: bytes) -> int | None:

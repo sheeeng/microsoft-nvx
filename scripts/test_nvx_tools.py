@@ -10648,6 +10648,33 @@ class SandboxTests(unittest.TestCase):
             ):
                 sandbox_lifecycle._deserialize_launch(config)
 
+    def test_managed_configuration_filesystem_error_is_script_error(self):
+        config: dict[str, object] = {
+            "format": sandbox_lifecycle.CONFIG_FORMAT,
+            "layers": [
+                {
+                    "role": "distro",
+                    "path": "distro.erofs",
+                    "uuid": "11111111-1111-1111-1111-111111111111",
+                }
+            ],
+            "scratch": "scratch.ext4",
+            "hostname": "nvx-sandbox",
+            "workload_uid": 65534,
+            "workload_gid": 65534,
+            "memory_max": None,
+            "pids_max": None,
+        }
+        with patch.object(
+            sandbox.SandboxLaunch,
+            "validated",
+            side_effect=OSError("configuration path is unavailable"),
+        ):
+            with self.assertRaisesRegex(
+                common.ScriptError, "sandbox configuration is malformed"
+            ):
+                sandbox_lifecycle._deserialize_launch(config)
+
     def test_managed_lifecycle_persists_and_replays_caller_owner(self):
         with tempfile.TemporaryDirectory() as temporary:
             root = Path(temporary).resolve()
