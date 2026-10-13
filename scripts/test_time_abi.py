@@ -1505,6 +1505,14 @@ class DoctorTests(unittest.TestCase):
         fields = time_abi.parse_fields(line.removeprefix(doctor.DOCTOR_PREFIX))
         self.assertEqual(fields["detail"], 'say "x" \\ y')
 
+    def test_run_probe_reports_malformed_records_as_script_errors(self):
+        result = completed('NVX-HOST-TIME-PROBE rate value="\\xZZ"\n')
+        context = doctor_context(self.root)
+        context.probe = self.root / "probe"
+        with patch.object(doctor.subprocess, "run", return_value=result):
+            with self.assertRaisesRegex(doctor.ScriptError, "malformed rate record"):
+                doctor.run_probe(context)
+
     def test_backend_check_requires_a_usable_device(self):
         context = doctor_context(self.root)
         existing: set[str] = set()

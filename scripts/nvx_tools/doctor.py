@@ -222,7 +222,13 @@ def run_probe(
     for line in completed.stdout.splitlines():
         if line.startswith(PROBE_PREFIX):
             kind, _, fields = line.removeprefix(PROBE_PREFIX).partition(" ")
-            records.append((kind, parse_fields(fields)))
+            try:
+                parsed = parse_fields(fields)
+            except ValueError as error:
+                raise ScriptError(
+                    f"host time probe printed malformed {kind} record: {error}"
+                ) from error
+            records.append((kind, parsed))
     return records
 
 
