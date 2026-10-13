@@ -54,6 +54,7 @@ from .common import (
     openvmm_binary_path,
     require_file,
     sha256_file,
+    terminate_process,
 )
 from .control_session import ControlSession, ManagedExecRefused
 from .egress_policy import CompiledEgressPolicy, compile_policy_file
@@ -1044,12 +1045,7 @@ def run_managed_lifecycle(
                 if boot_console is not None:
                     guest_log_path.write_bytes(boot_console.finish(check=False))
                 if process is not None and process.poll() is None:
-                    process.terminate()
-                    try:
-                        process.wait(timeout=5)
-                    except subprocess.TimeoutExpired:
-                        process.kill()
-                        process.wait(timeout=5)
+                    terminate_process(process)
 
         invalid = workload_boot_command(
             executable,

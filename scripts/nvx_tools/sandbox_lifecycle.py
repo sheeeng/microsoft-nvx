@@ -20,6 +20,7 @@ from .common import (
     artifact_path,
     openvmm_binary_path,
     require_file,
+    terminate_process,
 )
 from .control_session import (
     MANAGED_EXIT_CATEGORIES,
@@ -606,12 +607,7 @@ def start(state_path: Path, timeout: float) -> None:
             session.ping(timeout)
     except BaseException:
         if process is not None and process.poll() is None:
-            process.terminate()
-            try:
-                process.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                process.kill()
-                process.wait(timeout=5)
+            terminate_process(process)
         (state_dir / RUNTIME_NAME).unlink(missing_ok=True)
         capability_path.unlink(missing_ok=True)
         (state_dir / CONTROL_SOCKET_NAME).unlink(missing_ok=True)
