@@ -14109,6 +14109,20 @@ class BenchmarkTests(unittest.TestCase):
         self.assertEqual(record["status"], "failure")
         self.assertIn("missing", str(record["error"]))
 
+    def test_device_io_summary_rejects_malformed_persisted_record(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            output = Path(temporary) / "device-io.log"
+            output.write_text(
+                "NVX_DEVICE_IO_RESULT={malformed}\n",
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(
+                ValueError,
+                rf"invalid device I/O record at {output}:1:",
+            ):
+                benchmark._read_device_io_records(output)
+
     def test_managed_tap_cleanup_uses_openvmm_pid(self):
         query: subprocess.CompletedProcess[str] = subprocess.CompletedProcess(
             ["ip"], 0, "", ""
