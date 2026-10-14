@@ -1768,6 +1768,15 @@ class DoctorTests(unittest.TestCase):
         self.assertEqual(fields["model"], "85")
         self.assertIn("nonstop_tsc", fields["flags"])
 
+    def test_reports_unreadable_host_clocksource(self):
+        with patch.object(
+            doctor, "CLOCKSOURCE_PATH", self.root / "missing-clocksource"
+        ):
+            with self.assertRaisesRegex(
+                doctor.ScriptError, "cannot read host clocksource"
+            ):
+                doctor.host_clocksource()
+
     def test_identifies_the_host_cpu_signature(self):
         HostCpu = time_abi.HostCpu
         with patch.object(doctor, "host_is_windows", return_value=True):
